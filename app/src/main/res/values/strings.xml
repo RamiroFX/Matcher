@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Matcher</string>
+
+    <!-- Strings related to login -->
+    <string name="facebook_app_id">408889039542736</string>
+    <string name="fb_login_protocol_scheme">fb408889039542736</string>
+    <!-- Strings related to login -->
+    <string name="matcher_logo">Matcher logo</string>
+</resources>
