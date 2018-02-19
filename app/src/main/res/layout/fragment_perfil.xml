@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.PerfilFragment">
+
+    <RelativeLayout
+        android:id="@+id/layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="50dp">
+
+        <ImageView
+            android:id="@+id/header_cover_image"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerCrop"
+
+            android:src="@drawable/com_facebook_button_login_silver_background"
+            app:srcCompat="@drawable/com_facebook_button_login_silver_background" />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+
+            android:id="@+id/profile"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+
+            android:layout_below="@+id/header_cover_image"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="-130dp"
+            android:elevation="5dp"
+            android:padding="20dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/com_facebook_profile_picture_blank_square"
+            app:civ_border_color="#FFFFFFFF"
+            app:civ_border_width="3dp" />
+
+        <RelativeLayout
+            android:id="@+id/profile_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/header_cover_image"
+            android:background="@color/colorAccent"
+            android:paddingBottom="24dp"
+            android:layout_margin="10dp">
+
+
+            <ImageView
+                android:id="@+id/edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_alignParentEnd="true"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginTop="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@android:drawable/ic_menu_edit" />
+
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="70dp"
+                android:textColor="#fff"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvAlias"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tvName"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="10dp"
+                android:textColor="#fff"
+                android:textSize="18sp" />
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/userData2Lo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@id/tvAlias"
+                android:layout_margin="5dp"
+                android:layout_marginTop="5dp"
+                android:paddingBottom="20dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="20dp">
+
+                <TextView
+                    android:id="@+id/tvSports"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginLeft="25dp"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:text="@string/sports"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toStartOf="@+id/tvSportsContent"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvSportsContent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintLeft_toRightOf="@+id/tvSports"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvAbout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:text="@string/about_me"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toStartOf="@+id/tvAboutContent"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSports" />
+
+                <TextView
+                    android:id="@+id/tvAboutContent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="asdasdasd"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintLeft_toRightOf="@+id/tvAbout"
+                    app:layout_constraintTop_toBottomOf="@id/tvSportsContent" />
+
+            </android.support.constraint.ConstraintLayout>
+        </RelativeLayout>
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/userDataLo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/profile_layout"
+            android:layout_margin="5dp"
+            android:layout_marginTop="5dp"
+            android:background="#fff"
+            android:orientation="vertical"
+            android:paddingBottom="20dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="20dp">
+
+            <TextView
+                android:id="@+id/tvEducation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_marginLeft="25dp"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                android:text="Education: "
+                android:textStyle="bold"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <TextView
+                android:id="@+id/tvEducationContent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                app:layout_constraintLeft_toRightOf="@+id/tvEducation"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <TextView
+                android:id="@+id/tvGender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                android:text="Gender: "
+                android:textStyle="bold"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvEducation" />
+
+            <TextView
+                android:id="@+id/tvGenderContent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                app:layout_constraintLeft_toRightOf="@+id/tvGender"
+                app:layout_constraintTop_toBottomOf="@+id/tvEducationContent" />
+
+            <TextView
+                android:id="@+id/tvDOB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="5dp"
+                android:clickable="true"
+                android:text="DOB: "
+                android:textStyle="bold"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvGender" />
+
+            <TextView
+                android:id="@+id/tvDOBContent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                app:layout_constraintLeft_toRightOf="@+id/tvDOB"
+                app:layout_constraintTop_toBottomOf="@+id/tvGenderContent" />
+
+            <TextView
+                android:id="@+id/tvEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="5dp"
+                android:clickable="true"
+                android:text="Email: "
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@+id/tvDOB"
+                app:layout_constraintLeft_toLeftOf="parent" />
+
+            <TextView
+                android:id="@+id/tvEmailContent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="0dp"
+                android:clickable="true"
+                app:layout_constraintTop_toBottomOf="@id/tvDOBContent"
+                app:layout_constraintLeft_toRightOf="@+id/tvEmail"/>
+
+            <Button
+                android:id="@+id/btnSignOut"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/userDataLo"
+                android:layout_marginTop="10dp"
+                android:background="#ff0000"
+                android:orientation="vertical"
+                android:paddingBottom="10dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="10dp"
+                android:text="@string/sign_out"
+                app:layout_constraintTop_toBottomOf="@id/tvEmail"/>
+        </android.support.constraint.ConstraintLayout>
+    </RelativeLayout>
+</ScrollView>
