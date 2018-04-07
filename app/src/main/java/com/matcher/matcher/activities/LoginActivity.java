@@ -1,5 +1,6 @@
 package com.matcher.matcher.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -29,13 +30,11 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.matcher.matcher.R;
 
 import java.util.Arrays;
 
-import com.matcher.matcher.Utils.Constants;
 import com.matcher.matcher.Utils.DBContract;
 import com.matcher.matcher.entities.Users;
 
@@ -58,6 +57,7 @@ public class LoginActivity extends AppCompatActivity {
 
     // UI references.
     private LoginButton loginButton;
+    //private ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -222,7 +222,7 @@ public class LoginActivity extends AppCompatActivity {
                             String token = login_result.getAccessToken().getToken();
                             String picUrl = "https://graph.facebook.com/me/picture?type=normal&method=GET&access_token=" + token;
 
-                            saveFacebookCredentialsInFirebase(login_result.getAccessToken(), f_name);
+                            saveFacebookCredentialsInFirebase(login_result.getAccessToken(), f_name, facebook_id);
 
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
@@ -236,7 +236,9 @@ public class LoginActivity extends AppCompatActivity {
         data_request.executeAsync();
     }
 
-    private void saveFacebookCredentialsInFirebase(AccessToken accessToken, final String facebookName) {
+    private void saveFacebookCredentialsInFirebase(AccessToken accessToken, final String facebookName, final String facebookId) {
+        loginButton.setEnabled(false);
+        //showProgressDialog();
         AuthCredential credential = FacebookAuthProvider.getCredential(accessToken.getToken());
         mAuth.signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
             @Override
@@ -268,6 +270,7 @@ public class LoginActivity extends AppCompatActivity {
                                         Long creationDate = user.getMetadata().getCreationTimestamp();
                                         final Users aNewUser = new Users(fullName, email, 0.0, 0.0, 0.0);
                                         aNewUser.setNickName(nickName);
+                                        aNewUser.setFacebookId(facebookId);
                                         aNewUser.setCreationDate(creationDate);
                                         mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).setValue(aNewUser);
                                     }
@@ -286,8 +289,25 @@ public class LoginActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
                     updateUI(null);
                 }
+                loginButton.setEnabled(true);
             }
         });
     }
+/*
+    public void showProgressDialog() {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(getString(R.string.loading));
+            mProgressDialog.setIndeterminate(true);
+        }
+
+        mProgressDialog.show();
+    }
+
+    public void hideProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
+    }*/
 }
 

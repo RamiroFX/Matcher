@@ -8,8 +8,8 @@
     <!-- Main menu -->
     <string name="title_activity_main">Menú</string>
     <string name="tab_text_1">Perfil</string>
-    <string name="tab_text_2">Tab 2</string>
-    <string name="tab_text_3">Tab 3</string>
+    <string name="tab_text_2">Amigos</string>
+    <string name="tab_text_3">Chats</string>
     <string name="action_settings">Settings</string>
     <string name="section_format">Hello World from section: %1$d</string>
     <!-- Perfil -->
@@ -22,6 +22,8 @@
     <string name="confirm_logout">¿Está seguro que desea cerrar sesión?</string>
     <string name="ok_button">Ok</string>
     <string name="cancel_button">Cancelar</string>
+    <string name="loading">Cargando</string>
+    <string name="send_message">Enviar mensaje</string>
     <!-- Notification -->
     <string name="general_error">Ha ocurrido un problema. Intentelo nuevamente.</string>
     <!-- TODO: Remove or change this placeholder text -->
@@ -36,4 +38,5 @@
         <item>Basket</item>
         <item>Tenis</item>
     </string-array>
+    <string name="title_activity_chat">ChatActivity</string>
 </resources>

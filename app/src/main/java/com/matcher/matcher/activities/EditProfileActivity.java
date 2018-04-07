@@ -19,34 +19,33 @@ import com.matcher.matcher.Utils.DBContract;
 import com.matcher.matcher.Utils.NotificationsUtils;
 import com.matcher.matcher.Utils.RequestCode;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class EditProfileActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "EditProfileActivity";
 
     private FirebaseAuth mAuth;
-    private FirebaseDatabase mDatabase;
     private DatabaseReference mDatabaseReference;
     private EditText etNickName;
-    private Button btnSave;
-    private String nickName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
         //Create instance of database
-        mDatabase = FirebaseDatabase.getInstance();
+        FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mDatabase.getReference();
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
         etNickName = findViewById(R.id.etAlias);
-        btnSave = findViewById(R.id.btnSaveProfile);
+        Button btnSave = findViewById(R.id.btnSaveProfile);
         btnSave.setOnClickListener(this);
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            nickName = extras.getString(DBContract.UserTable.COL_NAME_NICKNAME);
-            assert nickName != null;
-            if (!nickName.isEmpty()) {
+            String nickName = extras.getString(DBContract.UserTable.COL_NAME_NICKNAME, "");
+            if (nickName != null && !nickName.isEmpty()) {
                 etNickName.setText(nickName);
             }
         }
@@ -67,7 +66,7 @@ public class EditProfileActivity extends AppCompatActivity implements View.OnCli
             return;
         }
         String nickName = etNickName.getText().toString();
-        mDatabaseReference.child(Constants.USER_TABLE_NAME).child(uid).child("nickName").setValue(nickName);
+        mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).child(DBContract.UserTable.COL_NAME_NICKNAME).setValue(nickName);
         Intent intent = new Intent();
         intent.putExtra(RequestCode.RESULT.getDescription(), nickName);
         setResult(RESULT_OK, intent);

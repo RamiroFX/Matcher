@@ -16,6 +16,8 @@ import java.util.Map;
  */
 
 public class Users {
+    private String uid;
+    private String facebookId;
     private String fullName;
     private String nickName;
     private String email;
@@ -38,6 +40,22 @@ public class Users {
         this.rating = rating;
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+    public String getFacebookId() {
+        return facebookId;
+    }
+
+    public void setFacebookId(String facebookId) {
+        this.facebookId = facebookId;
     }
 
     public String getFullName() {
@@ -155,15 +173,17 @@ public class Users {
     @Override
     public String toString() {
         return "Users{" +
-                "fullName='" + fullName + '\'' +
-                "nickName='" + nickName + '\'' +
-                "email='" + email + '\'' +
-                "about='" + about + '\'' +
-                "rating='" + rating + '\'' +
-                "imageUrl='" + imageUrl + '\'' +
-                "latitude='" + latitude + '\'' +
-                "longitude='" + longitude + '\'' +
-                "creationDate='" + creationDate + '\'' +
+                "uid='" + uid + '\'' +
+                ", facebookId='" + facebookId + '\'' +
+                ", fullName='" + fullName + '\'' +
+                ", nickName='" + nickName + '\'' +
+                ", email='" + email + '\'' +
+                ", about='" + about + '\'' +
+                ", rating='" + rating + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", latitude='" + latitude + '\'' +
+                ", longitude='" + longitude + '\'' +
+                ", creationDate='" + creationDate + '\'' +
                 ", friends=" + friends +
                 ", Groups=" + groups +
                 ", Sports=" + sports +
