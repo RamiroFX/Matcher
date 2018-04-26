@@ -8,10 +8,12 @@
     <!-- Main menu -->
     <string name="title_activity_main">Menú</string>
     <string name="tab_text_1">Perfil</string>
-    <string name="tab_text_2">Amigos</string>
+    <string name="tab_text_2">Eventos</string>
     <string name="tab_text_3">Chats</string>
     <string name="action_settings">Settings</string>
     <string name="section_format">Hello World from section: %1$d</string>
+    <!-- Invite friends menu -->
+    <string name="action_select_invite_friends">Seleccionar</string>
     <!-- Perfil -->
     <string name="sign_out">Cerrar sesión</string>
     <string name="alias_hint">Nick name</string>
@@ -22,6 +24,7 @@
     <string name="confirm_logout">¿Está seguro que desea cerrar sesión?</string>
     <string name="ok_button">Ok</string>
     <string name="cancel_button">Cancelar</string>
+    <string name="acept_button">Aceptar</string>
     <string name="loading">Cargando</string>
     <string name="send_message">Enviar mensaje</string>
     <!-- Notification -->
@@ -39,4 +42,19 @@
         <item>Tenis</item>
     </string-array>
     <string name="title_activity_chat">ChatActivity</string>
+    <string name="friend_image_profile">Friend image profile</string>
+    <string name="event_name">Nombre</string>
+    <string name="create_event_name_hint">Ingrese un nombre para el evento</string>
+    <string name="event_schedule">Fecha del evento</string>
+    <string name="event_place">Lugar del evento</string>
+    <string name="location_field_hint">Lugar de evento</string>
+    <string name="invite_friends">Invitar amigos</string>
+    <string name="create_event_description_hint">(Opcional) Ingrese descripción del evento</string>
+    <string name="place_picker_ex">Hubo un problema al conectarse a Mapas</string>
+    <string name="chat_activity_message_hint">mensaje...</string>
+    <string name="chat_activity_btn_send">Enviar</string>
+    <string name="create_event_delete_event_text">Eliminar evento</string>
+    <string name="create_event_ok_text">Crear evento</string>
+    <string name="image_for_events_elements">Image for events elements</string>
+    <string name="title_activity_view_event">Mapa de evento</string>
 </resources>

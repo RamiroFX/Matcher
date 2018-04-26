@@ -22,6 +22,9 @@ public class Users {
     private String nickName;
     private String email;
     private String about;
+    private String gender;
+    private String favSports;
+    private String birthDate;
     private double rating;
     private String imageUrl;
     private double latitude;
@@ -168,6 +171,30 @@ public class Users {
         Users user = new Users();
 
         mDatabase.child("Users").child(userId).setValue(user);
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getFavSports() {
+        return favSports;
+    }
+
+    public void setFavSports(String favSports) {
+        this.favSports = favSports;
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
     }
 
     @Override

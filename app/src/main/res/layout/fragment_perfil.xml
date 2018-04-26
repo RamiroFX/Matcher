@@ -147,7 +147,6 @@
                     android:layout_marginTop="8dp"
                     android:clickable="true"
                     android:focusable="true"
-                    android:text="asdasdasd"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintLeft_toRightOf="@+id/tvAbout"

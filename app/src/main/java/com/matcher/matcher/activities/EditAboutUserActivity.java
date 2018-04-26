@@ -41,8 +41,7 @@ public class EditAboutUserActivity extends AppCompatActivity implements View.OnC
         btnSave.setOnClickListener(this);
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            aboutUser = extras.getString(DBContract.UserTable.COL_NAME_ABOUT);
-            assert aboutUser != null;
+            aboutUser = extras.getString(DBContract.UserTable.COL_NAME_ABOUT,"");
             if (!aboutUser.isEmpty()) {
                 etAboutUser.setText(aboutUser);
             }
@@ -63,7 +62,7 @@ public class EditAboutUserActivity extends AppCompatActivity implements View.OnC
             return;
         }
         String aboutUser = etAboutUser.getText().toString();
-        mDatabaseReference.child(Constants.USER_TABLE_NAME).child(uid).child("about").setValue(aboutUser);
+        mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).child(DBContract.UserTable.COL_NAME_ABOUT).setValue(aboutUser);
         Intent intent = new Intent();
         intent.putExtra(RequestCode.RESULT.getDescription(), aboutUser);
         setResult(RESULT_OK, intent);

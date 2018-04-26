@@ -4,7 +4,9 @@ public enum RequestCode {
     RESULT(1, "RESULT"),
     BTN_EDIT_PROFILE(2, "Edit user nick btn from PerfilFragment"),
     BTN_EDIT_ABOUT_USER(3, "Edit user about btn from PerfilFragment"),
-    IV_PROFILE_PICTURE(4, "SET profile picture from FriendFragment"),;
+    IV_PROFILE_PICTURE(4, "SET profile picture from FriendFragment"),
+    INVITED_FRIENDS_REQUEST(5, "Request friends from CreateEventActivity"),
+    CHAT_FRIENDS_REQUEST(6, "Request friends from ChatActivity"),;
 
     private int code;
     private String description;

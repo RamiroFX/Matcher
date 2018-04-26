@@ -11,3 +11,5 @@
     app:layoutManager="LinearLayoutManager"
     tools:context="com.matcher.matcher.fragments.FriendsFragment"
     tools:listitem="@layout/fragment_friends" />
+
+

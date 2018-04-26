@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -48,6 +49,7 @@ import com.google.firebase.storage.UploadTask;
 import com.matcher.matcher.R;
 import com.matcher.matcher.Utils.DBContract;
 import com.matcher.matcher.Utils.RequestCode;
+import com.matcher.matcher.Utils.SharedPreferenceHelper;
 import com.matcher.matcher.activities.EditAboutUserActivity;
 import com.matcher.matcher.activities.EditProfileActivity;
 import com.matcher.matcher.activities.MainActivity;
@@ -55,6 +57,8 @@ import com.matcher.matcher.dialogs.ConfirmLogoutDialog;
 import com.matcher.matcher.dialogs.SelectSportsDialog;
 import com.matcher.matcher.entities.Sports;
 import com.matcher.matcher.entities.SportsCategories;
+import com.matcher.matcher.entities.Users;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -66,19 +70,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link //PerfilFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link PerfilFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class PerfilFragment extends Fragment implements View.OnClickListener, ConfirmLogoutDialog.confirmLogoutDialogListener, SelectSportsDialog.SelectSportsDialogListener {
 
     private static final String TAG = "PerfilFragment";
+
     public static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
+    private static final String USER_GENDER = "user_gender";
+    private static final String USER_BIRTHDAY = "user_birthday";
     private TextView tvSportContent, tvAboutContent;
     private TextView tvNanme, tvNickName, tvGender, tvDOB, tvEmail, tvEducation;
     private ImageView ivEditProfile, ivProfilePicture;
@@ -90,89 +88,82 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
     private FirebaseDatabase mDatabase;
     private DatabaseReference mUserDatabaseRef;
     private StorageReference profileRef;
-    //User variables
-    private String nickName;
-    private String aboutUser;
+    //User vars
+    private Uri downloadURI;
+    private String userNick;
+    private String userAbout;
     private String favoriteSports;
-    private Uri filePath;
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    //private static final String ARG_PARAM1 = "param1";
-    //private static final String ARG_PARAM2 = "param2";
-
-    /* TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;*/
-
-    //private OnFragmentInteractionListener mListener;
+    private String userName;
+    private String userEmail;
+    private String userGender;
+    private String userBirthday;
 
     public PerfilFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment PerfilFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static PerfilFragment newInstance(String param1, String param2) {
-        Log.i(TAG, "newInstance");
-        PerfilFragment fragment = new PerfilFragment();
-        /*Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);*/
-        return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate");
+        setRetainInstance(true);
+        if (savedInstanceState == null) {
+            FirebaseStorage storage = FirebaseStorage.getInstance();
+            // Create a storage reference from our app
+            StorageReference storageRef = storage.getReference();
+            profileRef = storageRef.child("profile");
 
-        FirebaseStorage storage = FirebaseStorage.getInstance();
-        // Create a storage reference from our app
-        StorageReference storageRef = storage.getReference();
-        profileRef = storageRef.child("profile");
+            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            mDatabase = FirebaseDatabase.getInstance();
+            mUserDatabaseRef = mDatabase.getReference(DBContract.UserTable.TABLE_NAME).child(uid);
+            progressBar = new ProgressBar(this.getContext(), null, android.R.attr.progressBarStyleLarge);
 
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        mDatabase = FirebaseDatabase.getInstance();
-        mUserDatabaseRef = mDatabase.getReference(DBContract.UserTable.TABLE_NAME).child(uid);
-        progressBar = new ProgressBar(this.getContext(), null, android.R.attr.progressBarStyleLarge);
+            int[][] states = new int[][]{
+                    new int[]{android.R.attr.state_enabled}, // enabled
+                    new int[]{-android.R.attr.state_enabled}, // disabled
+                    new int[]{-android.R.attr.state_checked}, // unchecked
+                    new int[]{android.R.attr.state_pressed}  // pressed
+            };
 
-        int[][] states = new int[][]{
-                new int[]{android.R.attr.state_enabled}, // enabled
-                new int[]{-android.R.attr.state_enabled}, // disabled
-                new int[]{-android.R.attr.state_checked}, // unchecked
-                new int[]{android.R.attr.state_pressed}  // pressed
-        };
+            int[] colors = new int[]{
+                    Color.BLACK,
+                    Color.RED,
+                    Color.GREEN,
+                    Color.BLUE
+            };//190.52.170.38
 
-        int[] colors = new int[]{
-                Color.BLACK,
-                Color.RED,
-                Color.GREEN,
-                Color.BLUE
-        };
+            ColorStateList myList = new ColorStateList(states, colors);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                progressBar.setProgressBackgroundTintList(myList);
+            }
 
-        ColorStateList myList = new ColorStateList(states, colors);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            progressBar.setProgressBackgroundTintList(myList);
+            //progressBar.setVisibility(View.VISIBLE);  //To show ProgressBar
+            progressBar.setVisibility(View.GONE);     // To Hide ProgressBar
+            getUserProfileDataFacebook();
+            getUserProfileDataFirebase();
+            getUserPictureProfile();
+        } else {
+            Log.d(TAG, "SavedInstance !=null: " + savedInstanceState);
+            userName = savedInstanceState.getString(DBContract.UserTable.COL_NAME_FULLNAME);
+            userNick = savedInstanceState.getString(DBContract.UserTable.COL_NAME_NICKNAME);
+            userEmail = savedInstanceState.getString(DBContract.UserTable.COL_NAME__EMAIL);
+            userGender = savedInstanceState.getString(USER_GENDER);
+            userBirthday = savedInstanceState.getString(USER_BIRTHDAY);
+            favoriteSports = savedInstanceState.getString(DBContract.UserTable.COL_NAME_SPORTS);
+            userAbout = savedInstanceState.getString(DBContract.UserTable.COL_NAME_ABOUT);
+            tvNanme.setText(userName);
+            tvEmail.setText(userEmail);
+            tvGender.setText(userGender);
+            tvDOB.setText(userBirthday);
+            tvNickName.setText("(" + userNick + ")");
+            tvAboutContent.setText(userAbout);
+            tvSportContent.setText(favoriteSports);
         }
-
-        //progressBar.setVisibility(View.VISIBLE);  //To show ProgressBar
-        progressBar.setVisibility(View.GONE);     // To Hide ProgressBar
-        getUserProfileDataFacebook();
-        getUserProfileDataFirebase();
-        getUserPictureProfile();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateView");
         // Inflate the layout for this fragment
         View RootView = inflater.inflate(R.layout.fragment_perfil, container, false);
         tvSportContent = RootView.findViewById(R.id.tvSportsContent);
@@ -198,30 +189,81 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
         return RootView;
     }
 
-    /*
-        // TODO: Rename method, update argument and hook method into UI event
-        public void onButtonPressed(Uri uri) {
-            if (mListener != null) {
-                mListener.onFragmentInteraction(uri);
-            }
-        }
-    */
+
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        Log.i(TAG, "onAttach");
-        /*if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }*/
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d(TAG, "onSaveInstanceState: " + outState);
+        outState.putString(DBContract.UserTable.COL_NAME_FULLNAME, userName);
+        outState.putString(DBContract.UserTable.COL_NAME_NICKNAME, userNick);
+        outState.putString(DBContract.UserTable.COL_NAME__EMAIL, userEmail);
+        outState.putString(USER_GENDER, userGender);
+        outState.putString(USER_BIRTHDAY, userBirthday);
+        outState.putString(DBContract.UserTable.COL_NAME_SPORTS, favoriteSports);
+        outState.putString(DBContract.UserTable.COL_NAME_ABOUT, userAbout);
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        //mListener = null;
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+        Users anUser = new Users();
+        anUser.setFullName(userName);
+        anUser.setNickName(userNick);
+        anUser.setEmail(userEmail);
+        anUser.setGender(userGender);
+        anUser.setBirthDate(userBirthday);
+        anUser.setFavSports(favoriteSports);
+        anUser.setAbout(userAbout);
+        SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getContext());
+        sharedPreferenceHelper.saveUser(anUser);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getContext());
+        Users anUser = sharedPreferenceHelper.getUser();
+        userName = anUser.getFullName();
+        userNick = anUser.getNickName();
+        userEmail = anUser.getEmail();
+        userGender = anUser.getGender();
+        userBirthday = anUser.getBirthDate();
+        favoriteSports = anUser.getFavSports();
+        userAbout = anUser.getAbout();
+
+        tvNickName.setText(String.format("(%s)", userNick));
+        tvAboutContent.setText(userAbout);
+        tvSportContent.setText(favoriteSports);
+        tvNanme.setText(userName);
+        tvEmail.setText(userEmail);
+        tvGender.setText(userGender);
+        tvDOB.setText(userBirthday);
+        getUserPictureProfile();
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        Log.d(TAG, "onViewStateRestored: " + savedInstanceState);
+        if (savedInstanceState != null) {
+            userName = savedInstanceState.getString(DBContract.UserTable.COL_NAME_FULLNAME);
+            userNick = savedInstanceState.getString(DBContract.UserTable.COL_NAME_NICKNAME);
+            userEmail = savedInstanceState.getString(DBContract.UserTable.COL_NAME__EMAIL);
+            userGender = savedInstanceState.getString(USER_GENDER);
+            userBirthday = savedInstanceState.getString(USER_BIRTHDAY);
+            favoriteSports = savedInstanceState.getString(DBContract.UserTable.COL_NAME_SPORTS);
+            userAbout = savedInstanceState.getString(DBContract.UserTable.COL_NAME_ABOUT);
+
+            tvNickName.setText(String.format("(%s)", userNick));
+            tvAboutContent.setText(userAbout);
+            tvSportContent.setText(favoriteSports);
+            tvNanme.setText(userName);
+            tvEmail.setText(userEmail);
+            tvGender.setText(userGender);
+            tvDOB.setText(userBirthday);
+        }
     }
 
     @Override
@@ -294,21 +336,6 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
                 });
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     *//*
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
-    }
-*/
     private void getUserProfileDataFacebook() {
         // App code
         GraphRequest request = GraphRequest.newMeRequest(
@@ -316,14 +343,15 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
                 new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
-                        Log.v(TAG, response.toString());
-                        Log.v(TAG, object.toString());
-                        // Application code
-                        try {
-                            String name = object.getString("name");
-                            String email = object.getString("email");
-                            String gender = object.getString("gender");
-                            String birthday = object.getString("birthday");
+                        if (object != null) {
+                            Log.v(TAG, response.toString());
+                            Log.v(TAG, object.toString());
+                            // Application code
+                            try {
+                                userName = object.getString("name");
+                                userEmail = object.getString("email");
+                                userGender = object.getString("gender");
+                                userBirthday = object.getString("birthday");
                             /*JSONArray education = object.getJSONArray("education");
                             if (education != null && education.length() > 0) {
                                 for (int i = 0; i < education.length(); i++) {
@@ -334,86 +362,37 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
                                     }
                                 }
                             }*/
-                            //JSONObject educationChild = education.getJSONObject(0);
-                            //JSONObject school = educationChild.getJSONObject("school");
-                            //String school_name = school.getString("name");
-                            tvNanme.setText(name);
-                            tvGender.setText(gender);
-                            tvEmail.setText(email);
-                            tvDOB.setText(birthday);
-                            //tvEducation.setText(school_name);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-        Bundle parameters = new Bundle();
-        parameters.putString("fields", "id,name,email,gender,birthday,education");
-        request.setParameters(parameters);
-        request.executeAsync();
-
-    }
-
-    private void getFriendProfileDataFacebook(String facebookId) {
-        GraphRequest request = GraphRequest.newGraphPathRequest(
-                AccessToken.getCurrentAccessToken(),
-                "/" + facebookId,
-                new GraphRequest.Callback() {
-                    @Override
-                    public void onCompleted(GraphResponse response) {
-                        JSONObject object = response.getJSONObject();
-                        try {
-                            String name = object.getString("name");
-                            String email = object.getString("email");
-                            String gender = object.getString("gender");
-                            String birthday = object.getString("birthday");
-                            JSONArray education = object.getJSONArray("education");
-                            if (education != null && education.length() > 0) {
-                                for (int i = 0; i < education.length(); i++) {
-                                    if (education.getJSONObject(i).getString("type").equals("College")) {
-                                        JSONObject school = education.getJSONObject(i).getJSONObject("school");
-                                        String school_name = school.getString("name");
-                                        tvEducation.setText(school_name);
-                                    }
-                                }
+                                //JSONObject educationChild = education.getJSONObject(0);
+                                //JSONObject school = educationChild.getJSONObject("school");
+                                //String school_name = school.getString("name");
+                                tvNanme.setText(userName);
+                                tvEmail.setText(userEmail);
+                                tvGender.setText(userGender);
+                                tvDOB.setText(userBirthday);
+                                //tvEducation.setText(school_name);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
-                            tvNanme.setText(name);
-                            tvGender.setText(gender);
-                            tvEmail.setText(email);
-                            tvDOB.setText(birthday);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                        } else {
+                            Log.e(TAG, "getUserProfileDataFacebook == null");
                         }
                     }
                 });
-
         Bundle parameters = new Bundle();
         parameters.putString("fields", "id,name,email,gender,birthday,education");
         request.setParameters(parameters);
         request.executeAsync();
-    }
 
-
-    private void fillFriendData(String jsonFriend) {
-        try {
-            JSONObject anUser = new JSONObject(jsonFriend);
-            JSONObject userSports = anUser.getJSONObject(DBContract.UserTable.COL_NAME_SPORTS);
-            String name = anUser.getString(DBContract.UserTable.COL_NAME_FULLNAME);
-            String nickName = anUser.getString(DBContract.UserTable.COL_NAME_NICKNAME);
-            String about = anUser.getString(DBContract.UserTable.COL_NAME_ABOUT);
-        } catch (JSONException e) {
-            Log.e(TAG, e.toString());
-        }
     }
 
     private void getUserProfileDataFirebase() {
         mUserDatabaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                nickName = dataSnapshot.child(DBContract.UserTable.COL_NAME_NICKNAME).getValue(String.class);
-                tvNickName.setText("(" + nickName + ")");
-                aboutUser = dataSnapshot.child(DBContract.UserTable.COL_NAME_ABOUT).getValue(String.class);
-                tvAboutContent.setText(aboutUser);
+                userNick = dataSnapshot.child(DBContract.UserTable.COL_NAME_NICKNAME).getValue(String.class);
+                tvNickName.setText("(" + userNick + ")");
+                userAbout = dataSnapshot.child(DBContract.UserTable.COL_NAME_ABOUT).getValue(String.class);
+                tvAboutContent.setText(userAbout);
                 if (dataSnapshot.child(DBContract.UserTable.COL_NAME_SPORTS).getValue() != null) {
                     favoriteSports = "";
                     long childrenSport = dataSnapshot.child(DBContract.UserTable.COL_NAME_SPORTS).getChildrenCount();
@@ -446,15 +425,19 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
         });
     }
 
-    private void getUserPictureProfile(){
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        final Context context = this.getContext();
+    private void getUserPictureProfile() {
+        String uid;
+        try {
+            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        } catch (NullPointerException e) {
+            return;
+        }
         profileRef.child(uid).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
-                if(task.isSuccessful()){
-                    Uri downloadURI = task.getResult();
-                    Glide.with(context)
+                if (task.isSuccessful()) {
+                    downloadURI = task.getResult();
+                    Picasso.get()
                             .load(downloadURI)
                             .into(ivProfilePicture);
                 }
@@ -467,33 +450,18 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
         dialog.show(getChildFragmentManager(), TAG);
     }
 
-    private void test() {
-        SportsCategories sc1 = new SportsCategories("acuáticos", "Son aquellos que deben ser realizados en el agua");
-        SportsCategories sc2 = new SportsCategories("aéreos", "Son aquellos que deben ser realizados en el aire");
-        SportsCategories sc3 = new SportsCategories("agarre", "Son aquellos que involucran el contacto de las manos");
-        SportsCategories sc4 = new SportsCategories("animales", "Son aquellos que involucran la actividad con animales");
-        SportsCategories sc5 = new SportsCategories("atletismo", "Abarca numerosas disciplinas agrupadas en carreras, saltos, lanzamientos, pruebas combinadas y marcha");
-        SportsCategories sc6 = new SportsCategories("motor", "Son el conjunto de disciplinas deportivas practicadas con vehículos motorizados");
-        SportsCategories sc7 = new SportsCategories("ciclismo", "Se utiliza una bicicleta para recorrer circuitos al aire libre, en pista cubierta, o que engloba diferentes especialidades");
-        SportsCategories sc8 = new SportsCategories("combate", "Deporte competitivo de contacto donde dos contrincantes luchan uno contra el otro usando ciertas reglas de contacto, con el objetivo de simular algunas de las técnicas y tácticas");
-        SportsCategories sc9 = new SportsCategories("equipo", "La prueba se realiza entre dos equipos rivales, cada uno compuesto por la misma cantidad de jugadores");
-        Sports s1 = new Sports("Volley acuático", "sin descripción", sc1);
-        Sports s2 = new Sports("Parapente", "sin descripción", sc2);
-        Sports s3 = new Sports("Escalada", "sin descripción", sc3);
-    }
-
     private void editProfile() {
         Log.i(TAG, "editProfile");
         Intent i = new Intent(getActivity(), EditProfileActivity.class);
-        if (!TextUtils.isEmpty(nickName)) {
-            i.putExtra(DBContract.UserTable.COL_NAME_NICKNAME, nickName);
+        if (!TextUtils.isEmpty(userNick)) {
+            i.putExtra(DBContract.UserTable.COL_NAME_NICKNAME, userNick);
         }
         startActivityForResult(i, RequestCode.BTN_EDIT_PROFILE.getCode());
     }
 
     private void editFavoriteSportsProfile() {
         Log.i(TAG, "editFavoriteSportsProfile");
-        FragmentManager fm = getActivity().getSupportFragmentManager();
+        //FragmentManager fm = getActivity().getSupportFragmentManager();
         FragmentManager fm2 = getChildFragmentManager();
         DialogFragment dialog = SelectSportsDialog.newInstance(this);
         dialog.show(fm2, TAG);
@@ -502,8 +470,8 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
     private void editAboutUserProfile() {
         Log.i(TAG, "editAboutUserProfile");
         Intent i = new Intent(getActivity(), EditAboutUserActivity.class);
-        if (!TextUtils.isEmpty(aboutUser)) {
-            i.putExtra(DBContract.UserTable.COL_NAME_ABOUT, aboutUser);
+        if (!TextUtils.isEmpty(userAbout)) {
+            i.putExtra(DBContract.UserTable.COL_NAME_ABOUT, userAbout);
         }
         startActivityForResult(i, RequestCode.BTN_EDIT_ABOUT_USER.getCode());
     }
@@ -517,51 +485,44 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
 
     private void profilePictureHandler(Intent data) {
         Log.d(TAG, "profilePictureHandler");
-        /*Uri uri = data.getData();
-        profileRef.child(uri.getLastPathSegment());
-        profileRef.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                mUserDatabaseRef.child("profileImage").setValue(downloadUrl);
+        if (data != null) {
+            Uri filePath = data.getData();
+            Bitmap bitmap;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(Objects.requireNonNull(getActivity()).getContentResolver(), filePath);
+                ivProfilePicture.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        });*/
-        filePath = data.getData();
-        Bitmap bitmap;
-        try {
-            bitmap = MediaStore.Images.Media.getBitmap(Objects.requireNonNull(getActivity()).getContentResolver(), filePath);
-            ivProfilePicture.setImageBitmap(bitmap);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        final Context context = this.getContext();
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        progressBar.setVisibility(View.VISIBLE);
-        StorageReference ref = profileRef.child(uid);
-        ref.putFile(filePath)
-                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        progressBar.setVisibility(View.INVISIBLE);
-                        Toast.makeText(context, "Uploaded", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        progressBar.setVisibility(View.INVISIBLE);
-                        Toast.makeText(context, "Failed " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot
-                                .getTotalByteCount());
-                        progressBar.setProgress((int) progress);
-                    }
-                });
+            final Context context = this.getContext();
+            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            progressBar.setVisibility(View.VISIBLE);
+            StorageReference ref = profileRef.child(uid);
+            ref.putFile(filePath)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            progressBar.setVisibility(View.INVISIBLE);
+                            Toast.makeText(context, "Uploaded", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            progressBar.setVisibility(View.INVISIBLE);
+                            Toast.makeText(context, "Failed " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot
+                                    .getTotalByteCount());
+                            progressBar.setProgress((int) progress);
+                        }
+                    });
+        }
     }
 
 
@@ -569,16 +530,14 @@ public class PerfilFragment extends Fragment implements View.OnClickListener, Co
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == RequestCode.BTN_EDIT_PROFILE.getCode() && resultCode == Activity.RESULT_OK) {
             String nickName = data.getExtras().getString(RequestCode.RESULT.getDescription());
-            tvNickName.setText("(" + nickName + ")");
-            this.nickName = nickName;
+            tvNickName.setText(String.format("(%s)", nickName));
+            this.userNick = nickName;
         } else if (requestCode == RequestCode.BTN_EDIT_ABOUT_USER.getCode() && resultCode == Activity.RESULT_OK) {
             String aboutUser = data.getExtras().getString(RequestCode.RESULT.getDescription());
-            tvAboutContent.setText("(" + aboutUser + ")");
-            this.aboutUser = aboutUser;
+            tvAboutContent.setText(aboutUser);
+            this.userAbout = aboutUser;
         } else if (requestCode == RequestCode.IV_PROFILE_PICTURE.getCode() && resultCode == Activity.RESULT_OK
                 && data != null && data.getData() != null)
             profilePictureHandler(data);
     }
-
-
 }

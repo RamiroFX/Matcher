@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="5dp">
+
+    <RelativeLayout
+        android:id="@+id/rl_friend_message_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_friend_date_message_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:padding="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/layout_rounded_corner" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/rl_friend_message_date">
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/civ_friend_message_avatar"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="5dp"
+            android:src="@drawable/com_facebook_profile_picture_blank_square"/>
+
+        <TextView
+            android:id="@+id/tv_friend_message_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/layout_rounded_corner"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@id/civ_friend_message_avatar"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="#000" />
+    </RelativeLayout>
+</RelativeLayout>

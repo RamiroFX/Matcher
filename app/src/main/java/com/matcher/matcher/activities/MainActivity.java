@@ -3,8 +3,6 @@ package com.matcher.matcher.activities;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -12,13 +10,10 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +23,7 @@ import com.facebook.FacebookException;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -36,55 +32,47 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.matcher.matcher.R;
 import com.matcher.matcher.Utils.DBContract;
-import com.matcher.matcher.Utils.RequestCode;
-import com.matcher.matcher.adapters.MyFriendsRecyclerViewAdapter;
+import com.matcher.matcher.Utils.NotificationsUtils;
+import com.matcher.matcher.entities.ChatHeader;
+import com.matcher.matcher.entities.Event;
 import com.matcher.matcher.entities.FriendItemData;
-import com.matcher.matcher.entities.Users;
 import com.matcher.matcher.fragments.ChatsFragment;
+import com.matcher.matcher.fragments.EventsFragment;
 import com.matcher.matcher.fragments.FriendsFragment;
 import com.matcher.matcher.fragments.PerfilFragment;
+import com.matcher.matcher.services.FacebookFriendsAsyncTask;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements FriendsFragment.OnFriendListInteractionListener, ChatsFragment.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements ChatsFragment.OnFragmentInteractionListener {
 
     private static final String TAG = "MainActivity";
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
-    private SectionsPagerAdapter mSectionsPagerAdapter;
 
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
+    private SectionsPagerAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
     /*
     Firebase references
      */
-
     private FirebaseDatabase mDatabase;
     private DatabaseReference mDatabaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), this);
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
@@ -95,17 +83,10 @@ public class MainActivity extends AppCompatActivity implements FriendsFragment.O
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         mDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mDatabase.getReference();
+        callFacebookFriendService();
     }
 
     @Override
@@ -181,42 +162,6 @@ public class MainActivity extends AppCompatActivity implements FriendsFragment.O
         request.executeAsync();
     }
 
-
-
-    @Override
-    public void onFriendListInteraction(FriendItemData mItem, final View view, int position) {
-        Log.d(TAG,"onFriendListInteraction: "+mItem);
-        Query query = mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).
-                orderByChild(DBContract.UserTable.COL_NAME_FACEBOOK_ID).
-                equalTo(mItem.getId()).
-                limitToFirst(1);
-        Log.d(TAG,"onDataChange: "+mItem.getId());
-        Log.d(TAG,"onDataChange: "+query);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG,"onDataChange: "+dataSnapshot);
-                if (dataSnapshot.exists()) {
-                    Log.d(TAG,"dataSnapshot.exists()");
-                    // dataSnapshot is the "issue" node with all children with id 0
-                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                        //ViewFriendProfile(snapshot);
-                        if(view instanceof ImageView){
-                            ViewFriendProfile(snapshot);
-                        }else if(view instanceof TextView){
-                            chatActivity(snapshot);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-    }
-
     private void getFriendProfileDataFacebook(String facebookId) {
         GraphRequest request = GraphRequest.newGraphPathRequest(
                 AccessToken.getCurrentAccessToken(),
@@ -285,66 +230,50 @@ public class MainActivity extends AppCompatActivity implements FriendsFragment.O
         }
     }
 
-    private void chatActivity(DataSnapshot dataSnapshot) {
-        if (dataSnapshot.getValue() != null) {
-            String uid = dataSnapshot.getKey();
-            String fullName = dataSnapshot.child(DBContract.UserTable.COL_NAME_FULLNAME).getValue(String.class);
-            Intent i = new Intent(getApplicationContext(), ChatActivity.class);
-            i.putExtra(DBContract.UserTable.COL_NAME_FULLNAME, fullName);
-            i.putExtra(DBContract.UserTable.COL_NAME_UID, uid);
-            startActivity(i);
-        }
-
-    }
     @Override
     public void onFragmentInteraction(Uri uri) {
         Log.d(TAG, "ChatsFragment.onFragmentInteraction");
     }
 
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        public PlaceholderFragment() {
-        }
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
+    public void onChatItemClicked(ChatHeader chatHeader) {
+        if (chatHeader != null) {
+            String uid = chatHeader.getUid();
+            String fullName = chatHeader.getName();
+            Intent i = new Intent(getApplicationContext(), ChatActivity.class);
+            i.putExtra(DBContract.UserTable.COL_NAME_FULLNAME, fullName);
+            i.putExtra(DBContract.UserTable.COL_NAME_UID, uid);
+            startActivity(i);
         }
     }
 
-    /**
-     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-     * one of the sections/tabs/pages.
-     */
+    public void viewEvent(Event event) {
+            String uid = event.getUid();
+            Intent i = new Intent(getApplicationContext(), ViewEventActivity.class);
+            i.putExtra(DBContract.EventsTable.COL_NAME_UID, uid);
+            startActivity(i);
+    }
+
+    private void callFacebookFriendService() {
+        FacebookFriendsAsyncTask task = new FacebookFriendsAsyncTask();
+        task.execute();
+    }
+
+    public void onEventItemClicked(Event event) {
+        Log.d(TAG, "onEventItemClicked: " + event);
+        viewEvent(event);
+    }
+
+    public void closeApp() {
+        finish();
+    }
+
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        public SectionsPagerAdapter(FragmentManager fm) {
+        MainActivity mainActivity;
+
+        public SectionsPagerAdapter(FragmentManager fm, MainActivity mainActivity) {
             super(fm);
+            this.mainActivity = mainActivity;
         }
 
         @Override
@@ -353,7 +282,7 @@ public class MainActivity extends AppCompatActivity implements FriendsFragment.O
                 case 0:
                     return new PerfilFragment();
                 case 1:
-                    return new FriendsFragment();
+                    return new EventsFragment();
                 case 2:
                     return new ChatsFragment();
                 default:
@@ -368,7 +297,4 @@ public class MainActivity extends AppCompatActivity implements FriendsFragment.O
         }
     }
 
-    public void closeApp() {
-        finish();
-    }
 }

@@ -1,11 +1,9 @@
 package com.matcher.matcher.activities;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-
-import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -19,6 +17,8 @@ import com.facebook.GraphResponse;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -32,14 +32,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.matcher.matcher.R;
-
-import java.util.Arrays;
-
 import com.matcher.matcher.Utils.DBContract;
 import com.matcher.matcher.entities.Users;
+import com.matcher.matcher.services.FacebookFriendsAsyncTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Arrays;
 
 /**
  * A login screen that offers login via email/password.
@@ -64,6 +64,9 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         getSupportActionBar().hide();
+        //CONTROLAR VERSION DE GOOGLE PLAY SERVICE
+        //checkGooglePlayServiceVersion();
+
         //Firebase init
         FacebookSdk.sdkInitialize(getApplicationContext());
         AppEventsLogger.activateApp(this);
@@ -159,6 +162,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
+        Log.d(TAG,"onStart");
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         updateUI(currentUser);
@@ -178,7 +182,7 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
             Intent i = new Intent(this, MainActivity.class);
             startActivity(i);
-            //finish();
+            finish();
         }
     }
 
@@ -233,7 +237,6 @@ public class LoginActivity extends AppCompatActivity {
         permission_param.putString("fields", "id,name,email,picture.width(120).height(120)");
         data_request.setParameters(permission_param);
         data_request.executeAsync();
-        data_request.executeAsync();
     }
 
     private void saveFacebookCredentialsInFirebase(AccessToken accessToken, final String facebookName, final String facebookId) {
@@ -273,7 +276,9 @@ public class LoginActivity extends AppCompatActivity {
                                         aNewUser.setFacebookId(facebookId);
                                         aNewUser.setCreationDate(creationDate);
                                         mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).setValue(aNewUser);
+                                        callFacebookFriendTask();
                                     }
+                                    Log.d(TAG,"saveFacebookCredentialsInFirebase.signInWithCredential.onDataChange");
                                     updateUI(user);
                                 }
 
@@ -293,21 +298,20 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-/*
-    public void showProgressDialog() {
-        if (mProgressDialog == null) {
-            mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setMessage(getString(R.string.loading));
-            mProgressDialog.setIndeterminate(true);
-        }
 
-        mProgressDialog.show();
+    private void callFacebookFriendTask() {
+        FacebookFriendsAsyncTask task = new FacebookFriendsAsyncTask();
+        task.execute();
     }
 
-    public void hideProgressDialog() {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.dismiss();
+    private void checkGooglePlayServiceVersion() {
+        int status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getApplicationContext());
+        if (status == ConnectionResult.SUCCESS) {
+            //alarm to go and install Google Play Services
+        } else if (status == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
+            Toast.makeText(getApplicationContext(), "please udpate your google play service", Toast.LENGTH_SHORT).show();
         }
-    }*/
+    }
+
 }
 
