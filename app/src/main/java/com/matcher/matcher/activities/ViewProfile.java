@@ -1,35 +1,29 @@
 package com.matcher.matcher.activities;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.matcher.matcher.R;
 import com.matcher.matcher.Utils.DBContract;
+import com.squareup.picasso.Picasso;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
 
 
 public class ViewProfile extends AppCompatActivity {
@@ -41,12 +35,15 @@ public class ViewProfile extends AppCompatActivity {
     private Button btnSendMessage;
     private StorageReference profileRef;
 
-    private String userName, userNick, userAbout, userFacebookId;
+    private String userName, userNick, userAbout, userSports, userFacebookId;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_profile);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tb_activity_profile);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
         profileRef = storageRef.child("profile");
@@ -59,7 +56,7 @@ public class ViewProfile extends AppCompatActivity {
         tvDOB = findViewById(R.id.tvDOBContent);
         tvEmail = findViewById(R.id.tvEmailContent);
         tvEducation = findViewById(R.id.tvEducationContent);
-        btnSendMessage= findViewById(R.id.btnSignOut);
+        btnSendMessage = findViewById(R.id.btnSignOut);
         String sendMessage = getString(R.string.send_message);
         btnSendMessage.setText(sendMessage);
         //btnSendMessage.setOnClickListener(this);
@@ -71,16 +68,36 @@ public class ViewProfile extends AppCompatActivity {
             userName = extras.getString(DBContract.UserTable.COL_NAME_FULLNAME, "");
             userNick = extras.getString(DBContract.UserTable.COL_NAME_NICKNAME, "");
             userAbout = extras.getString(DBContract.UserTable.COL_NAME_ABOUT, "");
-            userFacebookId = extras.getString(DBContract.UserTable.COL_NAME_ABOUT, "");
+            userSports = extras.getString(DBContract.UserTable.COL_NAME_SPORTS, "");
+            userFacebookId = extras.getString(DBContract.UserTable.COL_NAME_FACEBOOK_ID, "");
             String uid = extras.getString(DBContract.UserTable.COL_NAME_UID, "");
             tvName.setText(userName);
             tvNickName.setText(userNick);
             tvAboutContent.setText(userAbout);
+            tvSportContent.setText(userSports);
             if (!userFacebookId.isEmpty()) {
                 getFriendProfileDataFacebook(userFacebookId);
             }
             getUserPictureProfile(uid);
         }
+    }
+
+    @Override
+    public boolean onNavigateUp() {
+        this.finish();
+        return super.onNavigateUp();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        this.finish();
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        this.finish();
+        super.onBackPressed();
     }
 
     private void getFriendProfileDataFacebook(String facebookId) {
@@ -136,16 +153,13 @@ public class ViewProfile extends AppCompatActivity {
         request.executeAsync();
     }
 
-    private void getUserPictureProfile(String uid){
-        final Context context = getBaseContext();
+    private void getUserPictureProfile(String uid) {
         profileRef.child(uid).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
-                if(task.isSuccessful()){
+                if (task.isSuccessful()) {
                     Uri downloadURI = task.getResult();
-                    Glide.with(context)
-                            .load(downloadURI)
-                            .into(ivProfilePicture);
+                    Picasso.get().load(downloadURI).rotate(90).into(ivProfilePicture);
                 }
             }
         });

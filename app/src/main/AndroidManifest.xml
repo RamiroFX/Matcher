@@ -9,9 +9,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launchermatcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launchermatcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
@@ -30,7 +30,16 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDp9fdRHNOwbqmwOHkejZIwWtDY-rUHV2Q" />
-
+        <!-- Set custom default icon. This is used when no icon is set for incoming notification messages.
+             See README(https://goo.gl/l4GJaQ) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/matcher_notification_icon" />
+        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
+             notification message. See README(https://goo.gl/6BKBk7) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/colorAccent" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -53,11 +62,14 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".activities.EditProfileActivity" />
         <activity android:name=".activities.EditAboutUserActivity" />
-        <activity android:name=".activities.ViewProfile" />
+        <activity
+            android:name=".activities.ViewProfile"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".activities.ChatActivity"
             android:label="@string/title_activity_chat"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
 
         <service android:name=".services.FirebaseNotifications">
             <intent-filter>
@@ -69,12 +81,36 @@
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
+        <service
+            android:name=".services.FetchAddressIntentService"
+            android:exported="false" />
 
         <activity android:name=".activities.FriendsActivity" />
+        <activity android:name=".activities.FriendRequestActivity" />
         <activity android:name=".activities.CreateEventActivity" />
         <activity
             android:name=".activities.ViewEventActivity"
-            android:label="@string/title_activity_view_event"></activity>
+            android:label="@string/title_activity_view_event3"
+            android:parentActivityName=".activities.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.matcher.matcher.activities.MainActivity" />
+        </activity>
+        <activity
+            android:name=".activities.CreateGroupActivity"
+            android:windowSoftInputMode="adjustPan"
+            android:theme="@style/AppTheme.NoActionBar"/>
+        <activity
+            android:name=".activities.CreateDuelActivity"
+            android:label="@string/title_activity_create_duel"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.ViewChallengeMapActivity"
+            android:label="@string/title_activity_view_duel_map"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".activities.SportsActivity" />
+        <activity android:name=".activities.ChallengeRequestActivity"/>
     </application>
 
 </manifest>

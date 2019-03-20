@@ -14,17 +14,21 @@ import com.matcher.matcher.R;
  */
 
 public class ConfirmLogoutDialog extends DialogFragment {
+
+    private String message;
     public interface confirmLogoutDialogListener {
         void onDialogPositiveClick(DialogFragment dialog);
+        void onDialogNegativeClick(DialogFragment dialog);
     }
 
 
     public ConfirmLogoutDialog() {
     }
 
-    public static ConfirmLogoutDialog newInstance(confirmLogoutDialogListener confirmLogoutDialogListener) {
+    public static ConfirmLogoutDialog newInstance(confirmLogoutDialogListener confirmLogoutDialogListener, String message) {
         ConfirmLogoutDialog frag = new ConfirmLogoutDialog();
         frag.mListener = confirmLogoutDialogListener;
+        frag.message = message;
         return frag;
     }
     confirmLogoutDialogListener mListener;
@@ -33,7 +37,7 @@ public class ConfirmLogoutDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(R.string.confirm_logout)
+        builder.setMessage(message)
                 .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         mListener.onDialogPositiveClick(ConfirmLogoutDialog.this);
@@ -41,7 +45,7 @@ public class ConfirmLogoutDialog extends DialogFragment {
                 })
                 .setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        // User cancelled the dialog
+                        mListener.onDialogNegativeClick(ConfirmLogoutDialog.this);
                     }
                 });
         // Create the AlertDialog object and return it

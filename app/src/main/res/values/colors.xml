@@ -12,4 +12,5 @@
     <color name="grey_800">#212121</color>
     <color name="colorActionMode">#009362</color>
     <color name="colorControlActivated">#50FF4081</color>
+    <color name="white">#FFFFFF</color>
 </resources>

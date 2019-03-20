@@ -2,7 +2,6 @@ package com.matcher.matcher.fragments;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -11,34 +10,40 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.matcher.matcher.R;
+import com.matcher.matcher.Utils.Constants;
 import com.matcher.matcher.Utils.DBContract;
 import com.matcher.matcher.Utils.RequestCode;
+import com.matcher.matcher.Utils.SharedPreferenceHelper;
 import com.matcher.matcher.activities.ChatActivity;
+import com.matcher.matcher.activities.CreateGroupActivity;
 import com.matcher.matcher.activities.FriendsActivity;
 import com.matcher.matcher.activities.MainActivity;
 import com.matcher.matcher.adapters.ChatsAdapter;
 import com.matcher.matcher.entities.ChatHeader;
+import com.matcher.matcher.interfaces.LogAnalyticEventListener;
 
 
 public class ChatsFragment extends Fragment {
 
     private static final String TAG = "ChatsFragment";
     private static final int CHAT_FRIEND_REQUEST = 6;
-    private OnFragmentInteractionListener mListener;
+    private LogAnalyticEventListener mListener;
 
     private RecyclerView chatsList;
     private ChatsAdapter chatsAdapter;
-    private DatabaseReference databaseRef;
+    private DatabaseReference chatsRef;
 
     private ChildEventListener chatListRef;
 
@@ -50,8 +55,11 @@ public class ChatsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        this.databaseRef = FirebaseDatabase.getInstance().getReference().child(DBContract.ChatsTable.TABLE_NAME).child(uid);
+        SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getContext());
+        String uid = sharedPreferenceHelper.getUser().getUid();
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+        this.chatsRef = databaseReference.child(DBContract.ChatsTable.TABLE_NAME).child(uid);
+        setHasOptionsMenu(true);
     }
 
 
@@ -60,17 +68,16 @@ public class ChatsFragment extends Fragment {
                              Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView");
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
-        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_chat);
+        FloatingActionButton fab = view.findViewById(R.id.fab_chat);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent i = new Intent(getContext(), FriendsActivity.class);
                 i.putExtra(RequestCode.CHAT_FRIENDS_REQUEST.getDescription(), RequestCode.CHAT_FRIENDS_REQUEST.getCode());
                 startActivityForResult(i, CHAT_FRIEND_REQUEST);
-                //startActivity(i);
             }
         });
-        this.chatsList = (RecyclerView) view.findViewById(R.id.rvChatsList);
+        this.chatsList = view.findViewById(R.id.rvChatsList);
         return view;
     }
 
@@ -78,22 +85,38 @@ public class ChatsFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         Log.d(TAG, "onActivityCreated");
-        //((MainActivity)getActivity())
         this.chatsAdapter = new ChatsAdapter(((MainActivity) getActivity()));
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_chat_tab, menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_create_group: {
+                createGroup();
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void createGroup() {
+        Intent i = new Intent(getContext(), CreateGroupActivity.class);
+        i.putExtra(Constants.GROUP_ACTIVITY_TYPE, Constants.GROUP_ACTIVITY_TYPE_CREATE);
+        startActivity(i);
+    }
+
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        if (context instanceof LogAnalyticEventListener) {
+            mListener = (LogAnalyticEventListener) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -106,32 +129,21 @@ public class ChatsFragment extends Fragment {
         mListener = null;
     }
 
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri uri);
-    }
-
     @Override
     public void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
-        chatsAdapter.clearList();
         retrieveChats();
         listenChats();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause");
-        chatsAdapter.clearList();
     }
 
     @Override
     public void onStop() {
         super.onStop();
         Log.d(TAG, "onStop");
+        chatsAdapter.clearList();
         if (chatListRef != null) {
-            databaseRef.removeEventListener(chatListRef);
+            chatsRef.removeEventListener(chatListRef);
         }
     }
 
@@ -140,29 +152,37 @@ public class ChatsFragment extends Fragment {
         chatsList.setLayoutManager(new LinearLayoutManager(getActivity()));
     }
 
+
     public void listenChats() {
-        chatListRef = databaseRef.addChildEventListener(
+        chatListRef = chatsRef.addChildEventListener(
                 new ChildEventListener() {
                     @Override
                     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                        Log.d(TAG, "onChildAdded :" + dataSnapshot.getValue());
-                        Log.d(TAG, "onChildAdded.getKey: " + dataSnapshot.getKey());
+                        Log.d(TAG, "listenChats.onChildAdded: " + dataSnapshot);
                         ChatHeader chatHeader = dataSnapshot.getValue(ChatHeader.class);
-                        chatHeader.setUid(dataSnapshot.getKey());
-                        chatsAdapter.onChatAdded(chatHeader);
+                        if (chatHeader != null) {
+                            chatHeader.setUid(dataSnapshot.getKey());
+                            chatsAdapter.onChatAdded(chatHeader);
+                        }
                     }
 
                     @Override
                     public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                        Log.d(TAG, "onChildChanged :" + dataSnapshot.getValue());
+                        Log.d(TAG, "listenChats.onChildChanged: " + dataSnapshot);
                         ChatHeader chatHeader = dataSnapshot.getValue(ChatHeader.class);
-                        chatHeader.setUid(dataSnapshot.getKey());
-                        chatsAdapter.onChatChanged(chatHeader);
+                        if (chatHeader != null) {
+                            chatHeader.setUid(dataSnapshot.getKey());
+                            chatsAdapter.onChatChanged(chatHeader);
+                        }
                     }
 
                     @Override
                     public void onChildRemoved(DataSnapshot dataSnapshot) {
-
+                        ChatHeader chatHeader = dataSnapshot.getValue(ChatHeader.class);
+                        if (chatHeader != null) {
+                            chatHeader.setUid(dataSnapshot.getKey());
+                            chatsAdapter.onChatRemoved(chatHeader);
+                        }
                     }
 
                     @Override
@@ -188,8 +208,10 @@ public class ChatsFragment extends Fragment {
         }
     }
 
-
     private void showChatActivity(Intent data) {
+        if (mListener != null) {
+            mListener.logAnalyticEvent(Constants.CHAT_SELECT_CHAT_EVENT, DBContract.ChatsTable.TABLE_NAME);
+        }
         if (data == null) {
             Log.d(TAG, "data es null");
             return;

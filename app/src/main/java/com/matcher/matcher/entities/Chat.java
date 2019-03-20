@@ -5,6 +5,7 @@ package com.matcher.matcher.entities;
  */
 
 import com.google.firebase.database.Exclude;
+import com.matcher.matcher.Utils.DBContract;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -13,31 +14,31 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Chat {
-    private String name;
+    private Friend friend;
     private String message;
     private Long timeStamp;
 
     public Chat() {
     }
 
-    public Chat(String name, String message) {
-        this.name = name;
+    public Chat(Friend friend, String message) {
+        this.friend = friend;
         this.message = message;
         this.timeStamp = new Date().getTime();
     }
 
-    public Chat(String name, String message, Long timeStamp) {
-        this.name = name;
+    public Chat(Friend friend, String message, Long timeStamp) {
+        this.friend = friend;
         this.message = message;
         this.timeStamp = timeStamp;
     }
 
-    public String getName() {
-        return name;
+    public Friend getFriend() {
+        return friend;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFriend(Friend friend) {
+        this.friend = friend;
     }
 
     public String getMessage() {
@@ -71,16 +72,16 @@ public class Chat {
     @Exclude
     public Map<String, Object> toMap() {
         HashMap<String, Object> result = new HashMap<>();
-        result.put("name", name);
-        result.put("message", message);
-        result.put("timeStamp", timeStamp);
+        result.put(DBContract.MessageTable.COL_NAME_USER, friend);
+        result.put(DBContract.MessageTable.COL_NAME_MESSAGE, message);
+        result.put(DBContract.MessageTable.COL_NAME_TIMESTAMP, timeStamp);
         return result;
     }
 
     @Override
     public String toString() {
         return "chat{" +
-                "name: " + getName() +
+                "user: " + getFriend() +
                 " ,message: " + getMessage() +
                 " ,timeStamp: " + getTimeStamp() +
                 "}";

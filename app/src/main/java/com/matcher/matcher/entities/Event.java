@@ -1,62 +1,49 @@
 package com.matcher.matcher.entities;
 
-
-import com.google.firebase.database.Exclude;
 import com.matcher.matcher.Utils.DBContract;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Event {
     private String uid;
-    private String ownerUid;
+    private String eventType;
+    private String placeName;
     private double longitude;
     private double latitude;
     private long scheduledTime;
-    private String eventName;
-    private String description;
-    private String placeName;
-    @Exclude
-    private Map<String, String> invitedFriends;
-    /*private ArrayList<Long> confirmedGuests;
-    private ArrayList<Long> invitedGuests;
-    private ArrayList<Long> declinedGuests;*/
 
     public Event() {
-        invitedFriends = new HashMap<>();
     }
 
-    public Event(String uid, String ownerUid, long scheduledTime, String eventName,String eventDescription,
-                 String placeName, double latitude, double longitude) {
+    public Event(String uid, String eventType, String placeName, double longitude, double latitude, long scheduledTime) {
         this.uid = uid;
-        this.ownerUid = ownerUid;
+        this.eventType = eventType;
         this.placeName = placeName;
-        this.scheduledTime = scheduledTime;
-        this.eventName = eventName;
-        this.description = eventDescription;
-        this.latitude = latitude;
         this.longitude = longitude;
-        this.invitedFriends = new HashMap<>();
+        this.latitude = latitude;
+        this.scheduledTime = scheduledTime;
     }
 
-    @Exclude
     public String getUid() {
         return uid;
     }
 
-    @Exclude
     public void setUid(String uid) {
         this.uid = uid;
     }
 
-    public String getOwnerUid() {
-        return ownerUid;
+    public String getEventType() {
+        return eventType;
     }
 
-    public void setOwnerUid(String ownerUid) {
-        this.ownerUid = ownerUid;
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
+
+    public String getPlaceName() {
+        return placeName;
+    }
+
+    public void setPlaceName(String placeName) {
+        this.placeName = placeName;
     }
 
     public double getLongitude() {
@@ -83,68 +70,28 @@ public class Event {
         this.scheduledTime = scheduledTime;
     }
 
-    public String getEventName() {
-        return eventName;
-    }
 
-    public void setEventName(String eventName) {
-        this.eventName = eventName;
-    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
 
-    public String getDescription() {
-        return description;
-    }
+        Event itemCompare = (Event) obj;
+        if (itemCompare.getUid().equals(this.getUid()))
+            return true;
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getPlaceName() {
-        return placeName;
-    }
-
-    public void setPlaceName(String placeName) {
-        this.placeName = placeName;
-    }
-
-    @Exclude
-    public Map<String, String> getInvitedFriends() {
-        return invitedFriends;
-    }
-
-    @Exclude
-    public void setInvitedFriends(Map<String, String> invitedFriends) {
-        this.invitedFriends = invitedFriends;
-    }
-
-    @Exclude
-    public void addFriends(Friend friend) {
-        this.invitedFriends.put(friend.getUid(), friend.getUsername());
-    }
-
-    @Exclude
-    public String eventDate() {
-        return new SimpleDateFormat("dd/MM/yyyy").format(new Date(getScheduledTime()));
+        return false;
     }
 
     @Override
     public String toString() {
         return "Event{" +
-                "uid = "+getUid()+
-                ", eventName = "+getEventName()+
-                ", eventDescription = "+getDescription()+
-                ", eventSchedule = "+getScheduledTime()+
-                ", ownerUid = "+getOwnerUid()+
-                ", placeName = "+getPlaceName()+
-                ", placeLatitude = "+getLatitude()+
-                ", placeLongitude = "+getLongitude()+
-                "}";
-    }
-
-    public String toJsonString() {
-        return "{" +
-                "\""+ DBContract.EventsTable.COL_NAME_NAME+"\": \"" + getEventName() + "\"" +
-                ", \""+ DBContract.EventsTable.COL_NAME_SCHEDULED_TIME+"\": \"" + getScheduledTime() + "\"" +
+                DBContract.EventsTable.COL_NAME_UID + ":" + getUid() + "," +
+                DBContract.EventsTable.COL_NAME_EVENT_TYPE + ":" + getEventType() + "," +
+                DBContract.EventsTable.COL_NAME_PLACE_NAME + ":" + getPlaceName() + "," +
+                DBContract.EventsTable.COL_NAME_LATITUDE + ":" + getLatitude() + "," +
+                DBContract.EventsTable.COL_NAME_LONGITUDE + ":" + getLongitude() + "," +
+                DBContract.EventsTable.COL_NAME_SCHEDULED_TIME + ":" + getScheduledTime() + "," +
                 "}";
     }
 }

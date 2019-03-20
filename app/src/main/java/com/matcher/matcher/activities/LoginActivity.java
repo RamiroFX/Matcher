@@ -1,5 +1,6 @@
 package com.matcher.matcher.activities;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -20,6 +21,7 @@ import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -31,8 +33,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.matcher.matcher.R;
 import com.matcher.matcher.Utils.DBContract;
+import com.matcher.matcher.Utils.SharedPreferenceHelper;
 import com.matcher.matcher.entities.Users;
 import com.matcher.matcher.services.FacebookFriendsAsyncTask;
 
@@ -41,31 +45,25 @@ import org.json.JSONObject;
 
 import java.util.Arrays;
 
-/**
- * A login screen that offers login via email/password.
- */
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
 
     private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
-    private FirebaseDatabase mDatabase;
     private DatabaseReference mDatabaseReference;
 
-    //facebook callbackmanager
+    //Facebook callbackmanager
     private CallbackManager callbackManager;
 
     // UI references.
     private LoginButton loginButton;
-    //private ProgressDialog mProgressDialog;
+    private Dialog errorDialog;
+    private SharedPreferenceHelper sharedPreferenceHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         getSupportActionBar().hide();
-        //CONTROLAR VERSION DE GOOGLE PLAY SERVICE
-        //checkGooglePlayServiceVersion();
 
         //Firebase init
         FacebookSdk.sdkInitialize(getApplicationContext());
@@ -74,83 +72,42 @@ public class LoginActivity extends AppCompatActivity {
         //Initialize callback manager
         callbackManager = CallbackManager.Factory.create();
 
+        //SharedPreferences
+        sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getApplicationContext());
+
         //Assign the views to the corresponding variables
         loginButton = (LoginButton) findViewById(R.id.login_button);
 
         //Assign the button permissions
-        loginButton.setReadPermissions(Arrays.asList("email", "public_profile", "user_birthday", "user_friends"));
+        loginButton.setReadPermissions(Arrays.asList("email", "public_profile", "user_birthday", "user_gender", "user_friends"));
 
         //Create instance of database
-        mDatabase = FirebaseDatabase.getInstance();
-        mDatabaseReference = mDatabase.getReference();
+        mDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
         //Assign the button a task
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                Log.d(TAG, "facebook:onSuccess:" + loginResult);
                 getUserInfo(loginResult);
-                //handleFacebookAccessToken(loginResult.getAccessToken());
             }
 
             @Override
             public void onCancel() {
-                Log.d(TAG, "facebook:onCancel");
             }
 
             @Override
             public void onError(FacebookException error) {
-                Log.d(TAG, "facebook:onError", error);
             }
         });
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+    }
 
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                //Get currently logged in user
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-
-                if (user != null) {
-                    // User is signed in
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-
-                    // Name, email address
-                    String name = user.getDisplayName();
-                    String email = user.getEmail();
-
-                    // The user's ID, unique to the Firebase project. Do NOT use this value to
-                    // authenticate with your backend server, if you have one. Use
-                    // FirebaseUser.getToken() instead.
-                    String uid = user.getUid();
-
-                    //Create user
-                    final Users newUser = new Users(name, email, 0.0, 0.0, 0.0);
-                    mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).setValue(newUser);
-
-                    mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            // This method is called once with the initial value and again
-                            // whenever data at this location is updated.
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError error) {
-                            // Failed to read value
-                            Log.w(TAG, "Failed to read value.", error.toException());
-                        }
-                    });
-
-                } else {
-                    // User is signed out
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
-                }
-            }
-        };
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkPlayServices();
     }
 
     @Override
@@ -162,7 +119,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        Log.d(TAG,"onStart");
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         updateUI(currentUser);
@@ -171,9 +127,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onStop() {
         super.onStop();
-        if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
-        }
     }
 
     private void updateUI(FirebaseUser currentUser) {
@@ -186,32 +139,8 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void handleFacebookAccessToken(AccessToken token) {
-        Log.d(TAG, "handleFacebookAccessToken:" + token);
-        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithCredential:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            updateUI(user);
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                            updateUI(null);
-                        }
-
-                        // ...
-                    }
-                });
-    }
-
     protected void getUserInfo(final LoginResult login_result) {
+        loginButton.setEnabled(false);
         GraphRequest data_request = GraphRequest.newMeRequest(
                 login_result.getAccessToken(),
                 new GraphRequest.GraphJSONObjectCallback() {
@@ -221,64 +150,72 @@ public class LoginActivity extends AppCompatActivity {
                             GraphResponse response) {
                         try {
                             String facebook_id = object.getString("id");
-                            String f_name = object.getString("name");
-                            String email_id = object.getString("email");
-                            String token = login_result.getAccessToken().getToken();
-                            String picUrl = "https://graph.facebook.com/me/picture?type=normal&method=GET&access_token=" + token;
-
-                            saveFacebookCredentialsInFirebase(login_result.getAccessToken(), f_name, facebook_id);
-
-                        } catch (JSONException e) {
-                            // TODO Auto-generated catch block
+                            String facebook_name = object.getString("name");
+                            AccessToken token = login_result.getAccessToken();
+                            saveFacebookCredentialsInFirebase(token, facebook_name, facebook_id);
+                        } catch (JSONException ignored) {
                         }
                     }
                 });
         Bundle permission_param = new Bundle();
-        permission_param.putString("fields", "id,name,email,picture.width(120).height(120)");
+        permission_param.putString("fields", "id,name,email");
         data_request.setParameters(permission_param);
         data_request.executeAsync();
     }
 
-    private void saveFacebookCredentialsInFirebase(AccessToken accessToken, final String facebookName, final String facebookId) {
-        loginButton.setEnabled(false);
-        //showProgressDialog();
-        AuthCredential credential = FacebookAuthProvider.getCredential(accessToken.getToken());
+    private void saveFacebookCredentialsInFirebase(AccessToken token, final String fName, final String fID) {
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
         mAuth.signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     // Sign in success, update UI with the signed-in user's information
-                    Log.d(TAG, "signInWithCredential:success");
                     final FirebaseUser user = mAuth.getCurrentUser();
                     final String uid = user.getUid();
                     mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).
                             addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(DataSnapshot dataSnapshot) {
-                                    Log.d(TAG, "onDataChange: " + dataSnapshot);
-                                    Log.i(TAG, dataSnapshot.getChildren().toString());
-                                    Log.i(TAG, dataSnapshot.getChildrenCount() + "");
-
                                     boolean isNewUser = true;
                                     String fullName = dataSnapshot.child(DBContract.UserTable.COL_NAME_FULLNAME).getValue(String.class);
                                     if (fullName != null && !fullName.isEmpty()) isNewUser = false;
-                                    String email = dataSnapshot.child(DBContract.UserTable.COL_NAME__EMAIL).getValue(String.class);
+                                    String email = dataSnapshot.child(DBContract.UserTable.COL_NAME_EMAIL).getValue(String.class);
                                     if (email != null && !email.isEmpty()) isNewUser = false;
                                     if (isNewUser) {
-                                        Log.d(TAG, "onDataChange: creating new user: " + isNewUser);
                                         // Add the user to users table.
-                                        fullName = facebookName;
-                                        String nickName = facebookName;
+                                        fullName = fName;
+                                        String nickName = fName;
                                         email = user.getEmail();
                                         Long creationDate = user.getMetadata().getCreationTimestamp();
-                                        final Users aNewUser = new Users(fullName, email, 0.0, 0.0, 0.0);
+                                        final Users aNewUser = new Users(fullName, email, 0, 0.0, 0.0);
                                         aNewUser.setNickName(nickName);
-                                        aNewUser.setFacebookId(facebookId);
+                                        aNewUser.setFacebookId(fID);
                                         aNewUser.setCreationDate(creationDate);
-                                        mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).setValue(aNewUser);
-                                        callFacebookFriendTask();
+                                        mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).setValue(aNewUser).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                Log.d(TAG, "New user SAVING sharedPreferenceHelper");
+                                                sharedPreferenceHelper.setParameter(DBContract.UserTable.COL_NAME_UID, uid);
+                                                sharedPreferenceHelper.setParameter(DBContract.UserTable.COL_NAME_FULLNAME, fName);
+                                                sharedPreferenceHelper.setParameter(DBContract.UserTable.COL_NAME_NICKNAME, fName);
+                                                sharedPreferenceHelper.setParameter(DBContract.UserTable.COL_NAME_EMAIL, user.getEmail());
+                                                sharedPreferenceHelper.setParameterInteger(DBContract.UserTable.COL_NAME_SCORE, 0);
+                                                callFacebookFriendTask();
+                                            }
+                                        });
+                                    } else {
+                                        Log.d(TAG, "Old user SAVING sharedPreferenceHelper");
+                                        String nickName = dataSnapshot.child(DBContract.UserTable.COL_NAME_NICKNAME).getValue(String.class);
+                                        Integer score = dataSnapshot.child(DBContract.UserTable.COL_NAME_SCORE).getValue(Integer.class);
+                                        sharedPreferenceHelper.setParameter(DBContract.UserTable.COL_NAME_UID, uid);
+                                        sharedPreferenceHelper.setParameter(DBContract.UserTable.COL_NAME_FULLNAME, fName);
+                                        sharedPreferenceHelper.setParameter(DBContract.UserTable.COL_NAME_NICKNAME, nickName);
+                                        sharedPreferenceHelper.setParameter(DBContract.UserTable.COL_NAME_EMAIL, user.getEmail());
+                                        sharedPreferenceHelper.setParameterInteger(DBContract.UserTable.COL_NAME_SCORE, score);
                                     }
-                                    Log.d(TAG,"saveFacebookCredentialsInFirebase.signInWithCredential.onDataChange");
+                                    String notifToken = FirebaseInstanceId.getInstance().getToken();
+                                    mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).child(DBContract.UserTable.COL_NAME_NOTIFICATION_TOKEN).setValue(notifToken);
+                                    sharedPreferenceHelper.setNotificationToken(notifToken);
                                     updateUI(user);
                                 }
 
@@ -289,7 +226,6 @@ public class LoginActivity extends AppCompatActivity {
                             });
                 } else {
                     // If sign in fails, display a message to the user.
-                    Log.w(TAG, "signInWithCredential:failure", task.getException());
                     Toast.makeText(LoginActivity.this, "Authentication failed.",
                             Toast.LENGTH_SHORT).show();
                     updateUI(null);
@@ -300,18 +236,25 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void callFacebookFriendTask() {
-        FacebookFriendsAsyncTask task = new FacebookFriendsAsyncTask();
+        FacebookFriendsAsyncTask task = new FacebookFriendsAsyncTask(getApplicationContext());
         task.execute();
     }
 
-    private void checkGooglePlayServiceVersion() {
-        int status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getApplicationContext());
-        if (status == ConnectionResult.SUCCESS) {
-            //alarm to go and install Google Play Services
-        } else if (status == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
-            Toast.makeText(getApplicationContext(), "please udpate your google play service", Toast.LENGTH_SHORT).show();
+    private boolean checkPlayServices() {
+        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = googleApiAvailability.isGooglePlayServicesAvailable(this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (googleApiAvailability.isUserResolvableError(resultCode)) {
+                if (errorDialog == null) {
+                    errorDialog = googleApiAvailability.getErrorDialog(this, resultCode, 2404);
+                    errorDialog.setCancelable(false);
+                }
+                if (!errorDialog.isShowing()) {
+                    errorDialog.show();
+                }
+            }
         }
+        return resultCode == ConnectionResult.SUCCESS;
     }
-
 }
 

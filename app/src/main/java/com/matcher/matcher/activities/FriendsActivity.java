@@ -1,26 +1,18 @@
 package com.matcher.matcher.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.facebook.AccessToken;
-import com.facebook.FacebookException;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -30,32 +22,28 @@ import com.google.firebase.database.ValueEventListener;
 import com.matcher.matcher.R;
 import com.matcher.matcher.Utils.DBContract;
 import com.matcher.matcher.Utils.RequestCode;
-import com.matcher.matcher.adapters.MyFriendsRecyclerViewAdapter;
+import com.matcher.matcher.Utils.SharedPreferenceHelper;
 import com.matcher.matcher.adapters.SelectableFriendAdapter;
 import com.matcher.matcher.adapters.SelectableFriendViewHolder;
 import com.matcher.matcher.entities.Friend;
-import com.matcher.matcher.entities.FriendItemData;
+import com.matcher.matcher.entities.ScoredFriend;
 import com.matcher.matcher.entities.SelectableFriend;
-import com.matcher.matcher.fragments.FriendsFragment;
-
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class FriendsActivity extends AppCompatActivity implements SelectableFriendViewHolder.OnFriendSelectedListener {
 
     private static final String TAG = "FriendsActivity";
-    private static final String ON_USER_PROFILE_NOT_FOUND = "Es posible que el usuario no tenga perfil todavía";
     private static final int INVITED_FRIENDS_REQUEST = 5;
     private static final int CHAT_FRIEND_REQUEST = 6;
+    private static final int CHALLENGE_FRIEND_REQUEST = 7;
 
     private RecyclerView friendsRV;
     private MenuItem itemToHide;
     private DatabaseReference mDatabaseReference;
     private int requestType;
+    private String groupUid, groupOwnerUid, myUID;
 
     //Selectable adapter
     private SelectableFriendAdapter selectableFriendAdapter;
@@ -68,25 +56,40 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
         setContentView(R.layout.activity_friends);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
+        SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getApplicationContext());
+        this.myUID = sharedPreferenceHelper.getUser().getUid();
         mDatabaseReference = mDatabase.getReference();
         friendsRV = this.findViewById(R.id.rvFriendList);
+        selectedItems = new ArrayList<>();
+        selectableItems = new ArrayList<>();
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             requestType = extras.getInt(RequestCode.INVITED_FRIENDS_REQUEST.getDescription(), 0);
+            groupUid = extras.getString(DBContract.GroupTable.COL_NAME_UID, "");
+            groupOwnerUid = extras.getString(DBContract.GroupTable.COL_NAME_OWNER_UID, "");
             if (requestType == RequestCode.INVITED_FRIENDS_REQUEST.getCode()) {
-                selectedItems = new ArrayList<>();
-                selectableItems = new ArrayList<>();
                 selectableFriendAdapter = new SelectableFriendAdapter(this, selectableItems, true);
+                LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+                friendsRV.setAdapter(selectableFriendAdapter);
+                friendsRV.setLayoutManager(layoutManager);
+                if (!groupUid.isEmpty() && !groupOwnerUid.isEmpty()) {
+                    getGroupMembers();
+                } else {
+                    getFriends();
+                }
+                return;
+            }
+            requestType = extras.getInt(RequestCode.CHAT_FRIENDS_REQUEST.getDescription(), 0);
+            if (requestType == RequestCode.CHAT_FRIENDS_REQUEST.getCode()) {
+                selectableFriendAdapter = new SelectableFriendAdapter(this, selectableItems, false);
                 LinearLayoutManager layoutManager = new LinearLayoutManager(this);
                 friendsRV.setAdapter(selectableFriendAdapter);
                 friendsRV.setLayoutManager(layoutManager);
                 getFriends();
                 return;
             }
-            requestType = extras.getInt(RequestCode.CHAT_FRIENDS_REQUEST.getDescription(), 0);
-            if (requestType == RequestCode.CHAT_FRIENDS_REQUEST.getCode()) {
-                selectedItems = new ArrayList<>();
-                selectableItems = new ArrayList<>();
+            requestType = extras.getInt(RequestCode.CHALLENGE_FRIENDS_REQUEST.getDescription(), 0);
+            if (requestType == RequestCode.CHALLENGE_FRIENDS_REQUEST.getCode()) {
                 selectableFriendAdapter = new SelectableFriendAdapter(this, selectableItems, false);
                 LinearLayoutManager layoutManager = new LinearLayoutManager(this);
                 friendsRV.setAdapter(selectableFriendAdapter);
@@ -99,7 +102,7 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_invite_friends, menu);
-        if (requestType == RequestCode.CHAT_FRIENDS_REQUEST.getCode()) {
+        if (requestType == RequestCode.CHAT_FRIENDS_REQUEST.getCode() || requestType == RequestCode.CHAT_FRIENDS_REQUEST.getCode()) {
             itemToHide = menu.findItem(R.id.select_invited_friends);
             itemToHide.setVisible(false);
         }
@@ -144,7 +147,7 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
         switch (requestType) {
             case INVITED_FRIENDS_REQUEST: {
                 selectedItems = selectableFriendAdapter.getSelectedItems();
-                Snackbar.make(this.friendsRV, "Selected friend is " + item.getUsername() +
+                Snackbar.make(this.friendsRV, "Selected friend is " + item.getFullName() +
                         ", Totally  selectem item count is " + selectedItems.size(), Snackbar.LENGTH_LONG).show();
                 break;
             }
@@ -156,20 +159,50 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
                 }
                 break;
             }
+            case CHALLENGE_FRIEND_REQUEST: {
+                if (view instanceof ImageView) {
+                    ViewFriendProfile(item);
+                } else if (view instanceof TextView) {
+                    challengeFriend(item);
+                }
+                break;
+            }
         }
     }
 
     private void getFriends() {
         Log.d(TAG, "getFriends");
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        mDatabaseReference.child(DBContract.FriendshipTable.TABLE_NAME).child(uid).
+        mDatabaseReference.child(DBContract.FriendshipTable.TABLE_NAME).child(myUID).
                 addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+                        Log.d(TAG, "getFriends.onDataChange: " + dataSnapshot);
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            String uid = snapshot.getKey();
-                            String name = snapshot.getValue() + "";
-                            selectableFriendAdapter.onFriendAdded(new SelectableFriend(new Friend(uid, name), false));
+                            ScoredFriend scoredFriend = snapshot.getValue(ScoredFriend.class);
+                            scoredFriend.setUid(snapshot.getKey());
+                            selectableFriendAdapter.onFriendAdded(new SelectableFriend(scoredFriend, false));
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        throw databaseError.toException();
+                    }
+                });
+    }
+
+    private void getGroupMembers() {
+        Log.d(TAG, "getFriends");
+        mDatabaseReference.child(DBContract.GroupMemberTable.TABLE_NAME).child(groupUid).
+                addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Log.d(TAG, "DataSnapshot: " + dataSnapshot);
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            if (!snapshot.getKey().equals(groupOwnerUid)) {
+                                ScoredFriend scoredFriend = new ScoredFriend(snapshot.getKey(), snapshot.getValue() + "", 0);
+                                selectableFriendAdapter.onFriendAdded(new SelectableFriend(scoredFriend, false));
+                            }
                         }
                     }
 
@@ -181,7 +214,7 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
     }
 
     private void ViewFriendProfile(SelectableFriend item) {
-        String friendUID= item.getUid();
+        String friendUID = item.getUid();
         Query query = mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).
                 orderByChild(DBContract.UserTable.COL_NAME_UID).
                 equalTo(friendUID).limitToFirst(1);
@@ -195,6 +228,7 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
                         String fullName = snapshot.child(DBContract.UserTable.COL_NAME_FULLNAME).getValue(String.class);
                         String nickName = snapshot.child(DBContract.UserTable.COL_NAME_NICKNAME).getValue(String.class);
                         String aboutUser = snapshot.child(DBContract.UserTable.COL_NAME_ABOUT).getValue(String.class);
+                        int userScore = snapshot.child(DBContract.UserTable.COL_NAME_SCORE).getValue(Integer.class);
                         String facebookId = snapshot.child(DBContract.UserTable.COL_NAME_FACEBOOK_ID).getValue(String.class);
                         if (snapshot.child(DBContract.UserTable.COL_NAME_SPORTS).getValue() != null) {
                             int[] favoriteSports;
@@ -206,6 +240,7 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
                         i.putExtra(DBContract.UserTable.COL_NAME_NICKNAME, nickName);
                         i.putExtra(DBContract.UserTable.COL_NAME_ABOUT, aboutUser);
                         i.putExtra(DBContract.UserTable.COL_NAME_FACEBOOK_ID, facebookId);
+                        i.putExtra(DBContract.UserTable.COL_NAME_SCORE, userScore);
                         i.putExtra(DBContract.UserTable.COL_NAME_UID, uid);
                         startActivity(i);
                     }
@@ -220,7 +255,7 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
 
     private void chatActivity(SelectableFriend item) {
         String uid = item.getUid();
-        String fullName = item.getUsername();
+        String fullName = item.getFullName();
         Intent i = new Intent();
         i.putExtra(DBContract.UserTable.COL_NAME_FULLNAME, fullName);
         i.putExtra(DBContract.UserTable.COL_NAME_UID, uid);
@@ -230,7 +265,7 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
 
     private void seleccionarAmigos() {
         if (!selectedItems.isEmpty()) {
-            ArrayList<String> jsonArraylist = new ArrayList<String>();
+            ArrayList<String> jsonArraylist = new ArrayList<>();
             for (Friend friend : selectedItems) {
                 jsonArraylist.add(friend.toJsonString());
             }
@@ -239,7 +274,18 @@ public class FriendsActivity extends AppCompatActivity implements SelectableFrie
             setResult(RESULT_OK, intent);
             finish();
         } else {
-            Snackbar.make(this.friendsRV, "Seleccione al menos un amigo", Snackbar.LENGTH_LONG).show();
+            String message = getString(R.string.friend_activity_on_empty_list);
+            Snackbar.make(this.friendsRV, message, Snackbar.LENGTH_LONG).show();
         }
+    }
+
+    private void challengeFriend(SelectableFriend friend) {
+        String uid = friend.getUid();
+        String fullName = friend.getFullName();
+        Intent i = new Intent();
+        i.putExtra(DBContract.UserTable.COL_NAME_FULLNAME, fullName);
+        i.putExtra(DBContract.UserTable.COL_NAME_UID, uid);
+        setResult(RESULT_OK, i);
+        finish();
     }
 }

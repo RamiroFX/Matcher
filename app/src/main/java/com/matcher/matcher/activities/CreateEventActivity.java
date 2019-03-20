@@ -16,17 +16,21 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.matcher.matcher.R;
+import com.matcher.matcher.Utils.Constants;
 import com.matcher.matcher.Utils.DBContract;
 import com.matcher.matcher.Utils.RequestCode;
+import com.matcher.matcher.Utils.SharedPreferenceHelper;
 import com.matcher.matcher.dialogs.DatePickerFragment;
 import com.matcher.matcher.dialogs.TimePickerFragment;
-import com.matcher.matcher.entities.Event;
+import com.matcher.matcher.entities.EventGroup;
+import com.matcher.matcher.entities.EventParticipant;
 import com.matcher.matcher.entities.Friend;
+import com.matcher.matcher.entities.Users;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -60,17 +64,20 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
     private Button btnPlaceLocation, btnInviteFriends, btnCreateEvent;
 
     private Place eventPlace;
-    private List<Friend> friendList;
-
-    private String eventName, eventDescription;
+    private List<EventParticipant> friendList;
     private Date eventDate, eventTime;
+    private String myUID;
 
     private DatabaseReference mDatabaseReference;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getApplicationContext());
+        this.myUID = sharedPreferenceHelper.getUser().getUid();
         this.friendList = new ArrayList<>();
         this.etEventName = findViewById(R.id.et_create_event_name_content);
         this.etEventDescription = findViewById(R.id.et_create_event_description_content);
@@ -85,8 +92,26 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
         this.btnInviteFriends.setOnClickListener(this);
         this.btnCreateEvent = findViewById(R.id.create_event_ok_button);
         this.btnCreateEvent.setOnClickListener(this);
-        FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-        mDatabaseReference = mDatabase.getReference();
+        this.mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        this.mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+    }
+
+    @Override
+    public boolean onNavigateUp() {
+        this.finish();
+        return super.onNavigateUp();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        this.finish();
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        this.finish();
+        super.onBackPressed();
     }
 
     @Override
@@ -119,9 +144,9 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
         Log.d(TAG, "createEvent");
         if (isFormValid()) {
             Log.d(TAG, "Form is valid");
-            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
             String eventName = etEventName.getText().toString();
             String eventDescription = etEventDescription.getText().toString();
+            String eventPlaceName = etEventPlace.getText().toString();
             Calendar calendarDate = Calendar.getInstance();
             calendarDate.setTime(eventDate);
             Calendar calendarTime = Calendar.getInstance();
@@ -130,38 +155,52 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
             calendarDate.set(Calendar.MINUTE, calendarTime.get(Calendar.MINUTE));
             calendarDate.set(Calendar.SECOND, calendarTime.get(Calendar.SECOND));
             Long eventschedule = calendarDate.getTime().getTime();
-            Event event = new Event();
-            event.setEventName(eventName);
-            event.setDescription(eventDescription);
-            event.setScheduledTime(eventschedule);
-            event.setPlaceName(eventPlace.getName().toString());
-            event.setLatitude(eventPlace.getLatLng().latitude);
-            event.setLongitude(eventPlace.getLatLng().longitude);
-            event.setOwnerUid(uid);
-
+            SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getApplicationContext());
+            Users anUser = sharedPreferenceHelper.getUser();
+            EventGroup eventGroup = new EventGroup();
+            eventGroup.setEventName(eventName);
+            eventGroup.setDescription(eventDescription);
+            eventGroup.setScheduledTime(eventschedule);
+            eventGroup.setPlaceName(eventPlaceName);
+            eventGroup.setLatitude(eventPlace.getLatLng().latitude);
+            eventGroup.setLongitude(eventPlace.getLatLng().longitude);
+            eventGroup.setOwner(new Friend(myUID, anUser.getFullName()));
 
             String newEventKey = mDatabaseReference.child(DBContract.EventsTable.TABLE_NAME).push().getKey();
             Map<String, Object> childUpdates = new HashMap<>();
-            for (Friend aFriend : friendList) {
-                Log.d(TAG, "Adding friend to event : " + aFriend);
-                event.addFriends(aFriend);
-                childUpdates.put("/" + DBContract.UserTable.TABLE_NAME + "/" + aFriend.getUid()+"/"+DBContract.UserTable.COL_NAME_EVENTS+"/"+newEventKey, event.toJsonString());
+            //ADD current user to the eventGroup
+            EventParticipant currentUser = new EventParticipant();
+            currentUser.setUid(myUID);
+            currentUser.setFullName(anUser.getFullName());
+            currentUser.setStatus(DBContract.EventsParticipantsTable.COL_NAME_PARTICIPANT_STATUS_PRESENT);
+            eventGroup.addParticipant(currentUser);
+            //ADD eventGroup to the users
+            EventGroup eventValue = new EventGroup();
+            eventValue.setEventName(eventName);
+            eventValue.setOwner(new Friend(myUID, anUser.getFullName()));
+            eventValue.setEventType(DBContract.EventsTable.COL_NAME_GROUP_EVENT);
+            eventValue.setScheduledTime(eventschedule);
+            for (EventParticipant eventParticipant : friendList) {
+                Log.d(TAG, "Adding friend to eventGroup : " + eventParticipant);
+                childUpdates.put("/" + DBContract.UserEventsTable.TABLE_NAME + "/" + eventParticipant.getUid() + "/" + newEventKey, eventValue);
+                eventGroup.addParticipant(eventParticipant);
             }
-            childUpdates.put("/" + DBContract.UserTable.TABLE_NAME + "/" + event.getOwnerUid()+"/"+DBContract.UserTable.COL_NAME_EVENTS+"/"+newEventKey, event.toJsonString());
-            Log.d(TAG, "Event: " + event);
-            Log.d(TAG, "Participants: " + event.getInvitedFriends());
-            //Event
-            childUpdates.put("/" + DBContract.EventsTable.TABLE_NAME + "/" + newEventKey, event);
+            childUpdates.put("/" + DBContract.UserEventsTable.TABLE_NAME + "/" + eventGroup.getOwner().getUid() + "/" + newEventKey, eventValue);
+            Log.d(TAG, "EventGroup: " + eventGroup);
+            Log.d(TAG, "Participants: " + eventGroup.getInvitedFriends());
+            //EventGroup
+            childUpdates.put("/" + DBContract.EventsTable.TABLE_NAME + "/" + newEventKey, eventGroup);
             //Participants
-            childUpdates.put("/" + DBContract.EventsParticipantsTable.TABLE_NAME + "/" + newEventKey, event.getInvitedFriends());
+            childUpdates.put("/" + DBContract.EventsParticipantsTable.TABLE_NAME + "/" + newEventKey, eventGroup.getInvitedFriends());
 
-            Log.d(TAG, "Saving event");
+            Log.d(TAG, "Saving eventGroup");
             mDatabaseReference.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                     if (databaseError != null) {
                         Toast.makeText(getApplicationContext(), CREATE_EVENT_ON_COMPLETE_ERROR, Toast.LENGTH_SHORT).show();
                     } else {
+                        logAnalyticEvent(Constants.GROUP_CREATE_EVENT);
                         Toast.makeText(getApplicationContext(), CREATE_EVENT_ON_COMPLETE_SUCCESS, Toast.LENGTH_SHORT).show();
                         finish();
                     }
@@ -211,61 +250,89 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
         tvEventScheduledTime.setText(reportDate);
     }
 
+    private void logAnalyticEvent(String name){
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, name);
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, DBContract.EventsTable.COL_NAME_GROUP_EVENT);
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+    }
+
     private boolean isFormValid() {
         Log.d(TAG, "isFormValid");
         boolean result = true;
         //VALIDATE EVENT NAME
         if (TextUtils.isEmpty(etEventName.getText().toString())) {
             etEventName.setError(CREATE_EVENT_NAME_REQUIRED);
-            Log.d(TAG, "isFormValid: " + CREATE_EVENT_NAME_REQUIRED);
+            Log.d(TAG, "Invalid name: " + CREATE_EVENT_NAME_REQUIRED);
             result = false;
         } else {
-            Log.d(TAG, "isFormValid: etEventName.setError(null);");
-            etEventName.setError(null);
-        }
-        if (etEventName.getText().toString().length() > 25) {
-            etEventName.setError(CREATE_EVENT_NAME_TOO_LONG);
-            Log.d(TAG, "isFormValid: " + CREATE_EVENT_NAME_TOO_LONG);
-            result = false;
-        } else {
-            Log.d(TAG, "isFormValid: etEventName.setError(null)");
+            if (etEventName.getText().toString().length() > 25) {
+                etEventName.setError(CREATE_EVENT_NAME_TOO_LONG);
+                Log.d(TAG, "Invalid name: " + CREATE_EVENT_NAME_TOO_LONG);
+                result = false;
+            } else {
+                Log.d(TAG, "VALID name");
+                etEventName.setError(null);
+            }
             etEventName.setError(null);
         }
         //VALIDATE EVENT DESCRIPTION
         if (etEventDescription.getText().toString().length() > 50) {
             etEventDescription.setError(CREATE_EVENT_DESCRIPTION_TOO_LONG);
-            Log.d(TAG, "isFormValid: " + CREATE_EVENT_DESCRIPTION_TOO_LONG);
+            Log.d(TAG, "Invalid description: " + CREATE_EVENT_DESCRIPTION_TOO_LONG);
             result = false;
         } else {
-            Log.d(TAG, "isFormValid: etEventDescription.setError(null): " + CREATE_EVENT_DESCRIPTION_TOO_LONG);
+            Log.d(TAG, "VALID description");
             etEventDescription.setError(null);
         }
         //VALIDATE EVENT TIME
-        if (TextUtils.isEmpty(tvEventScheduledTime.getText().toString())) {
+        if (eventTime == null) {
             tvEventScheduledTime.setError(CREATE_EVENT_TIME_REQUIRED);
-            Log.d(TAG, "isFormValid: " + CREATE_EVENT_TIME_REQUIRED);
+            Log.d(TAG, "Invalid time: " + CREATE_EVENT_TIME_REQUIRED);
             result = false;
         } else {
-            Log.d(TAG, "isFormValid: tvEventScheduledTime.setError(null)" + CREATE_EVENT_TIME_REQUIRED);
+            Log.d(TAG, "VALID time");
             tvEventScheduledTime.setError(null);
         }
         //VALIDATE EVENT DATE
-        if (TextUtils.isEmpty(tvEventScheduledDate.getText().toString())) {
+        if (eventDate == null) {
             tvEventScheduledDate.setError(CREATE_EVENT_DATE_REQUIRED);
-            Log.d(TAG, "isFormValid: " + CREATE_EVENT_DATE_REQUIRED);
+            Log.d(TAG, "Invalid date: " + CREATE_EVENT_DATE_REQUIRED);
             result = false;
         } else {
-            Log.d(TAG, "isFormValid: tvEventScheduledDate.setError(null):" + CREATE_EVENT_DATE_REQUIRED);
+            Log.d(TAG, "VALID date");
             tvEventScheduledDate.setError(null);
         }
+        if (eventDate != null && eventTime != null) {
+            Calendar calTime = Calendar.getInstance();
+            calTime.setTime(eventTime);
+            Calendar challengeSchedule = Calendar.getInstance();
+            challengeSchedule.setTime(eventDate);
+            challengeSchedule.set(Calendar.HOUR_OF_DAY, calTime.get(Calendar.HOUR_OF_DAY));
+            challengeSchedule.set(Calendar.MINUTE, calTime.get(Calendar.MINUTE));
+            challengeSchedule.set(Calendar.SECOND, calTime.get(Calendar.SECOND));
+            if (challengeSchedule.getTime().before(Calendar.getInstance().getTime())) {
+                String date_req = getString(R.string.challenge_date_before_now_txt);
+                tvEventScheduledTime.setError(date_req);
+                result = false;
+            } else {
+                tvEventScheduledTime.setError(null);
+            }
+        }
         //VALIDATE EVENT PLACE
-        if (TextUtils.isEmpty(etEventPlace.getText().toString())) {
+        if(eventPlace!=null){
+            if (TextUtils.isEmpty(etEventPlace.getText().toString())) {
+                etEventPlace.setError(CREATE_EVENT_PLACE_REQUIRED);
+                Log.d(TAG, "Invalid place: " + CREATE_EVENT_PLACE_REQUIRED);
+                result = false;
+            } else {
+                Log.d(TAG, "VALID place");
+                etEventPlace.setError(null);
+            }
+        }else {
+            Log.d(TAG, "Invalid place: null");
             etEventPlace.setError(CREATE_EVENT_PLACE_REQUIRED);
-            Log.d(TAG, "isFormValid: " + CREATE_EVENT_PLACE_REQUIRED);
             result = false;
-        } else {
-            Log.d(TAG, "isFormValid: etEventPlace.setError(null):" + CREATE_EVENT_PLACE_REQUIRED);
-            etEventPlace.setError(null);
         }
         Log.d(TAG, "isFormValid: " + result);
         return result;
@@ -291,17 +358,17 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
                     String json = data.getStringExtra(RequestCode.INVITED_FRIENDS_REQUEST.getDescription());
                     try {
                         JSONArray jsonFriendArray = new JSONArray(json);
-                        Log.d(TAG, "INVITED_FRIENDS_REQUEST: "+jsonFriendArray);
+                        Log.d(TAG, "INVITED_FRIENDS_REQUEST: " + jsonFriendArray);
                         friendList.clear();
                         for (int i = 0; i < jsonFriendArray.length(); i++) {
                             JSONObject jsonFriend = jsonFriendArray.getJSONObject(i);
-                            Log.d(TAG, "INVITED_FRIENDS_REQUEST: "+jsonFriend);
+                            Log.d(TAG, "INVITED_FRIENDS_REQUEST: " + jsonFriend);
                             String uid = jsonFriend.getString(jsonFriend.keys().next());
                             String name = jsonFriend.getString(DBContract.UserTable.COL_NAME_FULLNAME);
-                            Log.d(TAG, "uid: "+uid);
-                            Log.d(TAG, "name: "+name);
-                            friendList.add(new Friend(uid, name));
-                            Log.d(TAG, "Added friend");
+                            Log.d(TAG, "uid: " + uid);
+                            Log.d(TAG, "name: " + name);
+                            friendList.add(new EventParticipant(uid, name, DBContract.EventsParticipantsTable.COL_NAME_PARTICIPANT_STATUS_PRESENT, 0.0, 0.0, 0));
+                            Log.d(TAG, "Participant added");
                         }
                     } catch (Throwable t) {
                         Log.e(TAG, "Could not parse malformed JSON: \"" + json + "\"");

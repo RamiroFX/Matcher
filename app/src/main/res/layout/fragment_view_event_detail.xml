@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:context=".fragments.ViewEventDetailFragment">
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/view_event_detaill_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:layout_marginTop="5dp"
+        android:background="#fff"
+        android:orientation="vertical"
+        android:paddingBottom="10dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp">
+
+        <TextView
+            android:id="@+id/tv_view_event_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="25dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            android:text="@string/view_event_event_name"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_view_event_name_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            app:layout_constraintLeft_toRightOf="@+id/tv_view_event_name"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_view_event_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            android:text="@string/view_event_description_name"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_view_event_name" />
+
+        <TextView
+            android:id="@+id/tv_view_event_description_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            app:layout_constraintLeft_toRightOf="@+id/tv_view_event_description"
+            app:layout_constraintTop_toBottomOf="@+id/tv_view_event_name" />
+
+        <TextView
+            android:id="@+id/tv_view_event_place"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:clickable="false"
+            android:text="@string/view_event_place_name"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_view_event_description" />
+
+        <TextView
+            android:id="@+id/tv_view_event_place_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            app:layout_constraintLeft_toRightOf="@+id/tv_view_event_place"
+            app:layout_constraintTop_toBottomOf="@+id/tv_view_event_description_content"/>
+
+        <TextView
+            android:id="@+id/tv_view_event_schedule"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:clickable="false"
+            android:text="Tiempo: "
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_view_event_place" />
+
+        <TextView
+            android:id="@+id/tv_view_event_schedule_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            app:layout_constraintLeft_toRightOf="@+id/tv_view_event_schedule"
+            app:layout_constraintTop_toBottomOf="@+id/tv_view_event_place_content"/>
+
+        <TextView
+            android:id="@+id/tv_view_event_owner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:clickable="false"
+            android:text="@string/view_event_creator_name"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_view_event_schedule" />
+
+        <TextView
+            android:id="@+id/tv_view_event_owner_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            app:layout_constraintLeft_toRightOf="@+id/tv_view_event_owner"
+            app:layout_constraintTop_toBottomOf="@+id/tv_view_event_schedule_content"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_view_event_detaill_header_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_below="@+id/view_event_detaill_container">
+
+        <TextView
+            android:id="@+id/view_event_detaill_participant_header_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/participants_header"
+            android:textStyle="bold"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/ll_view_event_detaill_header_container">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rvEventParticipants"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

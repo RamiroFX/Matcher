@@ -1,32 +1,50 @@
 package com.matcher.matcher.entities;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
-import java.util.ArrayList;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.Exclude;
+import com.matcher.matcher.Utils.DBContract;
+
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class Friend {
     @NonNull
-    String username;
+    String fullName;
     @NonNull
     String uid;
 
     public Friend() {
     }
 
-    public Friend(@NonNull String uid, String username) {
-        this.username = username;
+    public Friend(DataSnapshot ds) {
+        try {
+            JSONObject eventDetail = new JSONObject(ds.getValue() + "");
+            String uid = ds.getKey();
+            String name = eventDetail.getString(DBContract.ChallengeTable.COL_NAME_CHALLENGER);
+            setUid(uid);
+            setFullName(name);
+        } catch (Throwable t) {
+            Log.e("Friend", "Could not parse malformed JSON: \"" + ds.getValue() + "\"");
+        }
+    }
+
+    public Friend(@NonNull String uid, String fullName) {
+        this.fullName = fullName;
         this.uid = uid;
     }
 
     @NonNull
-    public String getUsername() {
-        return username;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setUsername(@NonNull String username) {
-        this.username = username;
+    public void setFullName(@NonNull String fullName) {
+        this.fullName = fullName;
     }
 
     @NonNull
@@ -38,18 +56,27 @@ public class Friend {
         this.uid = uid;
     }
 
+
+    @Exclude
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> result = new HashMap<>();
+        result.put(DBContract.UserTable.COL_NAME_UID, getUid());
+        result.put(DBContract.UserTable.COL_NAME_FULLNAME, getFullName());
+        return result;
+    }
+
     @Override
     public String toString() {
         return "friend:{" +
-                "uid: " + getUid() +
-                ", fullName: " + getUsername() +
+                DBContract.UserTable.COL_NAME_UID + ": " + getUid() +
+                ", " + DBContract.UserTable.COL_NAME_FULLNAME + ": " + getFullName() +
                 "}";
     }
 
     public String toJsonString() {
         return "{" +
-                "\"uid\": \"" + getUid() + "\"" +
-                ", \"fullName\": \"" + getUsername() + "\"" +
+                "\"" + DBContract.UserTable.COL_NAME_UID + "\": \"" + getUid() + "\"" +
+                ", \"" + DBContract.UserTable.COL_NAME_FULLNAME + "\": \"" + getFullName() + "\"" +
                 "}";
     }
 
@@ -63,13 +90,5 @@ public class Friend {
             return true;
 
         return false;
-    }
-
-    public Map<String, Object> mapFriends(ArrayList<String> friendList) {
-        HashMap<String, Object> result = new HashMap<>();
-        for (String friendUID : friendList) {
-            result.put(friendUID, true);
-        }
-        return result;
     }
 }

@@ -7,9 +7,10 @@
     <string name="matcher_logo">Matcher logo</string>
     <!-- Main menu -->
     <string name="title_activity_main">Menú</string>
-    <string name="tab_text_1">Perfil</string>
-    <string name="tab_text_2">Eventos</string>
-    <string name="tab_text_3">Chats</string>
+    <string name="perfil_tab_item_text">Perfil</string>
+    <string name="events_tab_item_text">Eventos</string>
+    <string name="chats_tab_item_text">Chats</string>
+    <string name="social_tab_item_text">Social</string>
     <string name="action_settings">Settings</string>
     <string name="section_format">Hello World from section: %1$d</string>
     <!-- Invite friends menu -->
@@ -21,40 +22,191 @@
     <string name="alias_textview">Alias</string>
     <!-- General -->
     <string name="save_changes">Guardar</string>
+    <string name="edit">Editar</string>
     <string name="confirm_logout">¿Está seguro que desea cerrar sesión?</string>
     <string name="ok_button">Ok</string>
     <string name="cancel_button">Cancelar</string>
-    <string name="acept_button">Aceptar</string>
+    <string name="accept_button">Aceptar</string>
     <string name="loading">Cargando</string>
     <string name="send_message">Enviar mensaje</string>
+    <string name="never_show_again_message">No mostrar otra vez</string>
+    <string name="save_changes_complete_message">Cambios guardados</string>
+    <string name="settings">Ajustes</string>
+    <string name="error_ocurrred_try_again_message">Ha ocurrido un error, intente nuevamente</string>
+    <string name="error_ocurrred_message">Ha ocurrido un error</string>
     <!-- Notification -->
     <string name="general_error">Ha ocurrido un problema. Intentelo nuevamente.</string>
-    <!-- TODO: Remove or change this placeholder text -->
+    <string name="unknown_location_message">Ubicación desconocida</string>
+    <!-- PERFIL FRAGMENT -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="image_profile">Foto de perfil</string>
     <string name="about_me">Acercade mi:</string>
     <string name="sports">Deportes:</string>
-
+    <string name="score">Puntos:</string>
+    <string name="education_txt">Educación:</string>
+    <string name="gender_txt">Género:</string>
+    <string name="dob_txt">Fecha de nac.:</string>
+    <string name="email_txt">Correo e.:</string>
+    <string name="profile_picture_uploaded_message">Foto subida</string>
     <string-array name="sports_array">
-        <item>Futbol</item>
-        <item>Volley</item>
-        <item>Basket</item>
+        <item>Fútbol</item>
+        <item>Vóleibol</item>
+        <item>Baloncesto</item>
         <item>Tenis</item>
+        <item>Tenis de mesa</item>
+        <item>Maratón</item>
+        <item>Ajedrez</item>
+        <item>Ciclismo</item>
+        <item>E-Sports</item>
+        <item>Balonmano</item>
+        <item>Golf</item>
+        <item>Squash</item>
+        <item>Natación</item>
+        <item>Remo</item>a
+        <item>Taekwondo</item>a
     </string-array>
     <string name="title_activity_chat">ChatActivity</string>
     <string name="friend_image_profile">Friend image profile</string>
+    <!-- Create eventGroup -->
     <string name="event_name">Nombre</string>
+    <string name="event_description">Descripción de evento</string>
     <string name="create_event_name_hint">Ingrese un nombre para el evento</string>
     <string name="event_schedule">Fecha del evento</string>
+    <string name="event_date">fecha</string>
+    <string name="event_time">hora</string>
     <string name="event_place">Lugar del evento</string>
     <string name="location_field_hint">Lugar de evento</string>
     <string name="invite_friends">Invitar amigos</string>
     <string name="create_event_description_hint">(Opcional) Ingrese descripción del evento</string>
     <string name="place_picker_ex">Hubo un problema al conectarse a Mapas</string>
-    <string name="chat_activity_message_hint">mensaje...</string>
-    <string name="chat_activity_btn_send">Enviar</string>
     <string name="create_event_delete_event_text">Eliminar evento</string>
     <string name="create_event_ok_text">Crear evento</string>
+    <!-- Create group -->
+    <string name="group_name">Nombre</string>
+    <string name="group_description">Descripción de grupo</string>
+    <string name="create_group_name_hint">Ingrese un nombre para el grupo</string>
+    <string name="create_group_description_hint">Ingrese una descripción para el grupo</string>
+    <string name="create_group_delete_group_text">Eliminar grupo</string>
+    <string name="create_group_ok_text">Crear grupo</string>
+    <string name="create_group_new_member_message">Bienvenid@ a</string>
+    <string name="create_group_removed_member_message">Has sido removido del grupo</string>
+    <!-- Create eventGroup -->
+    <string name="chat_activity_message_hint">mensaje…</string>
+    <string name="chat_activity_btn_send">Enviar</string>
     <string name="image_for_events_elements">Image for events elements</string>
     <string name="title_activity_view_event">Mapa de evento</string>
+    <string name="title_activity_view_event2">ViewEventActivity2</string>
+    <string name="title_activity_view_event3">Ver evento</string>
+    <string name="view_event_detail_tab_text">Info</string>
+    <string name="view_event_map_tab_text">Mapa</string>
+    <string name="participants_header">Participantes</string>
+    <string name="item_view_event_delete">Eliminar evento</string>
+    <string name="item_view_element_leave">Salir</string>
+    <string name="view_event_event_name">Nombre:</string>
+    <string name="view_event_description_name">Descripción:</string>
+    <string name="view_event_place_name">Lugar:</string>
+    <string name="view_event_creator_name">Creador:</string>
+    <string name="confirm_delete_event">¿Está seguro que desea eliminar el evento? Se borrara para todos los invitados.</string>
+    <string name="confirm_leave_event">¿Está seguro que desea salir del evento?</string>
+    <!-- COMMUNITY -->
+    <string name="SHOW_TO_COMMUNITY_MESSAGE">Serás visible para todo el público por un pequeño de tiempo</string>
+    <string name="FRIEND_REQUEST_MESSAGE">quiere ponerse en contacto contigo!</string>
+    <string name="friend_request_message_sended">Solicitud enviada</string>
+    <string name="no_location_data_provided">No hay datos de ubicación</string>
+    <string name="service_not_available">Servicio de ubicación no disponible</string>
+    <string name="invalid_lat_long_used">Localización inválida</string>
+    <string name="no_address_found">No se encontró la dirección</string>
+    <string name="address_found">Dirección encontrada</string>
+    <string name="permission_rationale">Permiso de ubicación es necesario para funcionar</string>
+    <string name="permission_denied_explanation">Permiso denegado, pero necesario para funcionar correctamente</string>
+    <string name="no_geocoder_available">El Geocoder no está disponible en este momento</string>
+    <string name="social_dialog_exit">X</string>
+    <string name="menu_item_delete_track">Borrar ubicación</string>
+    <string name="menu_event_item_clear_location">Limpiar ubicación</string>
+    <string name="menu_item_add_friend">Agregar amigo</string>
+    <string name="add_friend_message">Ingrese el e-mail:</string>
+    <string name="add_friend_title">Agregar amigo</string>
+    <string name="hint_add_friend_email">alguien@ejemplo.com</string>
+    <string name="text_add_friend_acept">Agregar</string>
+    <string name="text_add_friend_cancel">Cancelar</string>
+    <string name="text_add_friend_invalid_email">Correo inválido</string>
+    <string name="text_add_friend_already_friends">Ya eres amigo de ese usuario.</string>
+    <string name="user_same_email_message">No puedes ingresar tu propio e-mail</string>
+    <string name="text_add_friend_added_friend">Amigo agregado</string>
+    <string name="text_add_friend_not_added_friend">No se pudo agregar. Intente de nuevo</string>
+    <string name="text_add_friend_not_found">La persona que deseas agregar no esta utilizando la App. Invitalo!</string>
+    <string name="text_add_friend_email_not_found">No se encontró el e-mail ingresado</string>
+    <string name="text_to">A</string>
+    <string name="text_KM">Km.</string>
+    <string name="location_service_not_available_message">Servicio de ubicación no disponible</string>
+    <string name="could_not_get_location_message">No se pudo obtener ubicación</string>
+    <string name="got_location_message">Ubicación obtenida</string>
+    <string name="looking_for_location_message">Buscando ubicación</string>
+    <string name="getting_last_location_message">Cargando última ubicación</string>
+    <!-- CHAT FRAGMENT-->
+    <string name="menu_item_create_group">Crear grupo</string>
+    <string name="add_new_groupmember_message_succes">Agregado(s) correctamente</string>
+    <string name="remove_groupmember_message_succes">Removido(s) correctamente</string>
+    <string name="add_new_groupmember_message_failed">No se pudo agregar miembro(s)</string>
+    <string name="remove_groupmember_message_failed">No se pudo remover miembro(s)</string>
+    <!-- CHAT ACTIVITY -->
+    <string name="item_chat_leave_group">Salir del grupo</string>
+    <string name="item_chat_delete_group">Eliminar grupo</string>
+    <string name="item_chat_add_member">Agregar miembro</string>
+    <string name="item_chat_remove_member">Remover miembro</string>
+    <string name="confirm_delete_group">¿Está seguro que desea eliminar el grupo? Se borrarán los mensajes para todos los miembros.</string>
+    <string name="confirm_leave_group">¿Está seguro que desea salir del grupo? Perderas todos los mensajes.</string>
+    <string name="group_deleted">El grupo ha sido eliminado.</string>
+    <string name="item_chat_delete_chat">Eliminar chat</string>
+    <string name="confirm_delete_chat">¿Está seguro que desea eliminar la conversación?</string>
+    <string name="chat_deleted">La conversación ha sido eliminada.</string>
+    <!-- CREATE CHALLENGE ACTIVITY -->
+    <string name="title_activity_create_duel">Crear duelo</string>
+    <string name="title_activity_view_duel_map">Ubicación de duelo</string>
+    <string name="title_activity_view_duel">Desafío</string>
+    <string name="challenger_text">Competidor</string>
+    <string name="challenge_text">Desafío</string>
+    <string name="create_challenge_description">Descripción del desafío</string>
+    <string name="create_challenge_description_hint">(Opcional) Ingrese descripción del desafío</string>
+    <string name="challenge_date_title">Fecha del desafío</string>
+    <string name="challenge_place">Lugar del desafío</string>
+    <string name="challenge_place_hint">Ingrese lugar  del desafío</string>
+    <string name="create_challenge">Desafiar</string>
+    <string name="challenge_date">dd/MM/yy</string>
+    <string name="challenge_time">hh:mm</string>
+    <string name="challenge_friend_empty_txt">Escoge a alguien para el desafío!</string>
+    <string name="challenge_sport_empty_txt">Escoge un deporte para el desafío!</string>
+    <string name="challenge_time_empty_txt">Fija una hora!</string>
+    <string name="challenge_date_empty_txt">Fija una fecha!</string>
+    <string name="challenge_date_before_now_txt">Selecciona una fecha superio a la actual</string>
+    <string name="challenge_finish_date_before_now_txt">Todavía no llegó la fecha del evento</string>
+    <string name="challenge_place_empty_txt">Fija un lugar!</string>
+    <string name="create_challenge_on_complete_error">Ha ocurrido un error inesperado al crear el desafío. Intenta nuevamente :S</string>
+    <string name="create_challenge_on_complete_success">Enhorabuena! Desafío creado :)</string>
+    <string name="challenge_finished_message">El duelo ha finalizado</string>
+    <string name="challenge_finished_error_message">Ha ocurrido un error. Intente nuevamente</string>
+    <string name="create_challenge_on_accept_success">Desafío aceptado</string>
+    <string name="create_challenge_on_refuse_success">Desafío rechazado</string>
+    <string name="challenge_abandon">Abandonar</string>
+    <string name="challenge_finish">Finalizar</string>
+    <string name="challenge_winner_selected_message">El ganador ha sido seleccionado</string>
+    <string name="challenge_data_user_not_found_message">No se encontró datos del usuario</string>
+    <!-- VIEW CHALLENGE REQUEST ACTIVITY -->
+    <string name="challenge_request_message">te ha retado a una partida de</string>
+    <string name="challenge_request_message_schedule">el día</string>
+    <!--SPORT ACTIVITY-->
+    <string name="sport_activity_on_empty_list">Seleccione al menos un deporte</string>
+    <!--FRIEND ACTIVITY-->
+    <string name="friend_activity_on_empty_list">Seleccione al menos un amigo</string>
+    <!--SELECT WINNER DIALOG-->
+    <string name="select_winner_txt">Selecciona al ganador</string>
+    <string name="select_winner_rule">La decisión debe ser unánime en ambos lados para que la partida sea válida</string>
+    <string name="select_winner_incomplete_voting">Al otro competidor le falta seleccionar aún</string>
+    <string name="select_winner_abandon_message">Perderás puntos si abandonas el desafío. Está seguro?</string>
+    <string name="select_winner_abandon_message_pending">¿Estás seguro que deseas abandonar el desafío?</string>
+    <!--FRIEND ACTIVITY-->
+    <string name="friend_score">Puntos</string>
+    <string name="send_message_icon_txt">Send message icon</string>
+    <string name="create_group_members_text">Miembros</string>
+    <string name="create_group_owner_text">Propietario</string>
 </resources>

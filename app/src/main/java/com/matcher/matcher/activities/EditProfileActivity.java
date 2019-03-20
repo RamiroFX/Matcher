@@ -1,32 +1,25 @@
 package com.matcher.matcher.activities;
 
 import android.content.Intent;
-import android.support.design.widget.TabLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.matcher.matcher.R;
-import com.matcher.matcher.Utils.Constants;
 import com.matcher.matcher.Utils.DBContract;
-import com.matcher.matcher.Utils.NotificationsUtils;
 import com.matcher.matcher.Utils.RequestCode;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.matcher.matcher.Utils.SharedPreferenceHelper;
 
 public class EditProfileActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "EditProfileActivity";
 
-    private FirebaseAuth mAuth;
+    private String myUID;
     private DatabaseReference mDatabaseReference;
     private EditText etNickName;
 
@@ -37,8 +30,8 @@ public class EditProfileActivity extends AppCompatActivity implements View.OnCli
         //Create instance of database
         FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mDatabase.getReference();
-        // Initialize Firebase Auth
-        mAuth = FirebaseAuth.getInstance();
+        SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getApplicationContext());
+        this.myUID = sharedPreferenceHelper.getUser().getUid();
         etNickName = findViewById(R.id.etAlias);
         Button btnSave = findViewById(R.id.btnSaveProfile);
         btnSave.setOnClickListener(this);
@@ -53,20 +46,15 @@ public class EditProfileActivity extends AppCompatActivity implements View.OnCli
 
 
     private void setAlias() {
-        // FirebaseUser.getToken() instead.
         if (!validateForm()) {
             return;
         }
-        String uid;
-        try {
-            uid = mAuth.getCurrentUser().getUid();
-        } catch (NullPointerException e) {
-            String message = getResources().getString(R.string.general_error);
-            NotificationsUtils.showMessage(message, this.getBaseContext());
-            return;
-        }
         String nickName = etNickName.getText().toString();
-        mDatabaseReference.child(DBContract.UserTable.TABLE_NAME).child(uid).child(DBContract.UserTable.COL_NAME_NICKNAME).setValue(nickName);
+        //ruta a la propiedad Alias del usuario: users/uid/nickName
+        mDatabaseReference.child(DBContract.UserTable.TABLE_NAME)
+                .child(myUID)
+                .child(DBContract.UserTable.COL_NAME_NICKNAME)
+                .setValue(nickName);
         Intent intent = new Intent();
         intent.putExtra(RequestCode.RESULT.getDescription(), nickName);
         setResult(RESULT_OK, intent);

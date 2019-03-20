@@ -1,11 +1,11 @@
 package com.matcher.matcher.entities;
 
-public class SelectableFriend extends Friend {
+public class SelectableFriend extends ScoredFriend {
 
     private boolean isSelected = false;
 
-    public SelectableFriend(Friend item, boolean isSelected) {
-        super(item.getUid(), item.getUsername());
+    public SelectableFriend(ScoredFriend item, boolean isSelected) {
+        super(item.getUid(), item.getFullName(), item.getScore());
         this.isSelected = isSelected;
     }
 

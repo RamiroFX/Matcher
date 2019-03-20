@@ -25,7 +25,7 @@ public class Users {
     private String gender;
     private String favSports;
     private String birthDate;
-    private double rating;
+    private int score;
     private String imageUrl;
     private double latitude;
     private double longitude;
@@ -37,10 +37,10 @@ public class Users {
     public Users() {
     }
 
-    public Users(String fullName, String email, double rating, double latitude, double longitude) {
+    public Users(String fullName, String email, int score, double latitude, double longitude) {
         this.fullName = fullName;
         this.email = email;
-        this.rating = rating;
+        this.score = score;
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -101,12 +101,12 @@ public class Users {
         this.creationDate = creationDate;
     }
 
-    public double getRating() {
-        return rating;
+    public int getScore() {
+        return score;
     }
 
-    public void setRating(double rating) {
-        this.rating = rating;
+    public void setScore(int score) {
+        this.score = score;
     }
 
     public String getImageUrl() {
@@ -206,7 +206,7 @@ public class Users {
                 ", nickName='" + nickName + '\'' +
                 ", email='" + email + '\'' +
                 ", about='" + about + '\'' +
-                ", rating='" + rating + '\'' +
+                ", rating='" + score + '\'' +
                 ", imageUrl='" + imageUrl + '\'' +
                 ", latitude='" + latitude + '\'' +
                 ", longitude='" + longitude + '\'' +

@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.CheckedTextView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.matcher.matcher.R;
 import com.matcher.matcher.entities.SelectableFriend;
@@ -20,6 +21,7 @@ public class SelectableFriendViewHolder extends RecyclerView.ViewHolder {
     public static final int SINGLE_SELECTION = 1;
     CheckedTextView textView;
     ImageView ivUser;
+    TextView tvScore;
     SelectableFriend mItem;
     OnFriendSelectedListener friendSelectedListener;
 
@@ -28,6 +30,7 @@ public class SelectableFriendViewHolder extends RecyclerView.ViewHolder {
         super(view);
         friendSelectedListener = listener;
         ivUser = view.findViewById(R.id.iv_selectable_friend);
+        tvScore= view.findViewById(R.id.tvScoreContent);
         textView = (CheckedTextView) view.findViewById(R.id.ctv_selectable_friend);
         textView.setOnClickListener(new View.OnClickListener() {
             @Override

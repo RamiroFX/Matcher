@@ -14,6 +14,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.matcher.matcher.R;
+import com.matcher.matcher.Utils.DBContract;
 import com.matcher.matcher.entities.Friend;
 import com.matcher.matcher.entities.SelectableFriend;
 import com.squareup.picasso.Picasso;
@@ -23,6 +24,7 @@ import java.util.List;
 
 public class SelectableFriendAdapter extends RecyclerView.Adapter implements SelectableFriendViewHolder.OnFriendSelectedListener {
 
+    private static final String TAG = "SelectableFriendAdapter";
     private StorageReference profileRef;
     private final List<SelectableFriend> mValues;
     private boolean isMultiSelectionEnabled = false;
@@ -35,7 +37,7 @@ public class SelectableFriendAdapter extends RecyclerView.Adapter implements Sel
         this.mValues = items;
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
-        profileRef = storageRef.child("profile");
+        profileRef = storageRef.child(DBContract.ProfileStorage.TABLE_NAME);
     }
 
     @Override
@@ -47,7 +49,6 @@ public class SelectableFriendAdapter extends RecyclerView.Adapter implements Sel
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder, int position) {
-
         final SelectableFriendViewHolder holder = (SelectableFriendViewHolder) viewHolder;
         //set profile picture
         profileRef.child(mValues.get(position).getUid()).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
@@ -57,6 +58,7 @@ public class SelectableFriendAdapter extends RecyclerView.Adapter implements Sel
                     Uri downloadURI = task.getResult();
                     Picasso.get()
                             .load(downloadURI)
+                            .rotate(90)
                             .into(holder.ivUser);
                 }
             }
@@ -66,8 +68,8 @@ public class SelectableFriendAdapter extends RecyclerView.Adapter implements Sel
             }
         });
         SelectableFriend selectableItem = mValues.get(position);
-        String name = selectableItem.getUsername();
-        holder.textView.setText(name);
+        holder.textView.setText(selectableItem.getFullName());
+        holder.tvScore.setText(String.format("%d", selectableItem.getScore()));
         if (isMultiSelectionEnabled) {
             TypedValue value = new TypedValue();
             holder.textView.getContext().getTheme().resolveAttribute(android.R.attr.listChoiceIndicatorMultiple, value, true);
@@ -85,11 +87,10 @@ public class SelectableFriendAdapter extends RecyclerView.Adapter implements Sel
     }
 
     public void onFriendAdded(SelectableFriend aFriend) {
-        /*mValues.add(chatHeader);
-        notifyItemChanged(mValues.size()-1);*/
         mValues.add(aFriend);
-        notifyItemChanged(mValues.size()-1);
+        notifyItemChanged(mValues.size() - 1);
     }
+
     @Override
     public int getItemCount() {
         return mValues.size();
@@ -132,5 +133,4 @@ public class SelectableFriendAdapter extends RecyclerView.Adapter implements Sel
         }
         listener.onFriendSelected(item, view);
     }
-
 }

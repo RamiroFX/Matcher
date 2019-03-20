@@ -56,8 +56,8 @@
 
                 android:layout_alignParentEnd="true"
                 android:layout_marginLeft="16dp"
-                android:layout_marginRight="16dp"
                 android:layout_marginTop="16dp"
+                android:layout_marginRight="16dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:src="@android:drawable/ic_menu_edit" />
@@ -89,68 +89,98 @@
                 android:layout_below="@id/tvAlias"
                 android:layout_margin="5dp"
                 android:layout_marginTop="5dp"
-                android:paddingBottom="20dp"
                 android:paddingLeft="5dp"
+                android:paddingTop="20dp"
                 android:paddingRight="5dp"
-                android:paddingTop="20dp">
+                android:paddingBottom="20dp">
 
                 <TextView
                     android:id="@+id/tvSports"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
+                    android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
-                    android:layout_marginLeft="25dp"
-                    android:layout_marginTop="8dp"
                     android:clickable="true"
+                    android:focusable="true"
                     android:text="@string/sports"
                     android:textStyle="bold"
-                    app:layout_constraintEnd_toStartOf="@+id/tvSportsContent"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintBaseline_toBaselineOf="@+id/tvSportsContent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent" />
 
                 <TextView
                     android:id="@+id/tvSportsContent"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="5dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginLeft="8dp"
+                    android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
                     android:clickable="true"
                     android:focusable="true"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintLeft_toRightOf="@+id/tvSports"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toEndOf="@+id/tvSports"
                     app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvRank"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_margin="5dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="@string/score"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toStartOf="@+id/tvRankContent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSports" />
+
+                <TextView
+                    android:id="@+id/tvRankContent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/tvRank"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSportsContent" />
 
                 <TextView
                     android:id="@+id/tvAbout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
                     android:clickable="true"
+                    android:focusable="true"
                     android:text="@string/about_me"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toStartOf="@+id/tvAboutContent"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tvSports" />
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvRank" />
 
                 <TextView
                     android:id="@+id/tvAboutContent"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginLeft="8dp"
+                    android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
                     android:clickable="true"
                     android:focusable="true"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintLeft_toRightOf="@+id/tvAbout"
-                    app:layout_constraintTop_toBottomOf="@id/tvSportsContent" />
+                    app:layout_constraintStart_toEndOf="@+id/tvAbout"
+                    app:layout_constraintTop_toBottomOf="@+id/tvRankContent" />
 
             </android.support.constraint.ConstraintLayout>
         </RelativeLayout>
@@ -164,20 +194,19 @@
             android:layout_marginTop="5dp"
             android:background="#fff"
             android:orientation="vertical"
-            android:paddingBottom="20dp"
             android:paddingLeft="5dp"
+            android:paddingTop="20dp"
             android:paddingRight="5dp"
-            android:paddingTop="20dp">
+            android:paddingBottom="20dp">
 
             <TextView
                 android:id="@+id/tvEducation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_marginLeft="25dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:clickable="true"
-                android:text="Education: "
+                android:text="@string/education_txt"
                 android:textStyle="bold"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -187,9 +216,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:clickable="true"
                 app:layout_constraintLeft_toRightOf="@+id/tvEducation"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -198,10 +226,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:clickable="true"
-                android:text="Gender: "
+                android:text="@string/gender_txt"
                 android:textStyle="bold"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvEducation" />
@@ -211,9 +238,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_marginLeft="5dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:clickable="true"
                 app:layout_constraintLeft_toRightOf="@+id/tvGender"
                 app:layout_constraintTop_toBottomOf="@+id/tvEducationContent" />
 
@@ -221,10 +247,9 @@
                 android:id="@+id/tvDOB"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="5dp"
-                android:clickable="true"
-                android:text="DOB: "
+                android:text="@string/dob_txt"
                 android:textStyle="bold"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvGender" />
@@ -234,9 +259,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:clickable="true"
                 app:layout_constraintLeft_toRightOf="@+id/tvDOB"
                 app:layout_constraintTop_toBottomOf="@+id/tvGenderContent" />
 
@@ -244,10 +268,9 @@
                 android:id="@+id/tvEmail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="5dp"
-                android:clickable="true"
-                android:text="Email: "
+                android:text="@string/email_txt"
                 android:textStyle="bold"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvDOB" />
@@ -256,9 +279,8 @@
                 android:id="@+id/tvEmailContent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="0dp"
-                android:clickable="true"
                 app:layout_constraintLeft_toRightOf="@+id/tvEmail"
                 app:layout_constraintTop_toBottomOf="@id/tvDOBContent" />
 
@@ -270,10 +292,10 @@
                 android:layout_marginTop="10dp"
                 android:background="#ff0000"
                 android:orientation="vertical"
-                android:paddingBottom="10dp"
                 android:paddingLeft="5dp"
-                android:paddingRight="5dp"
                 android:paddingTop="10dp"
+                android:paddingRight="5dp"
+                android:paddingBottom="10dp"
                 android:text="@string/sign_out"
                 app:layout_constraintTop_toBottomOf="@id/tvEmail" />
         </android.support.constraint.ConstraintLayout>
