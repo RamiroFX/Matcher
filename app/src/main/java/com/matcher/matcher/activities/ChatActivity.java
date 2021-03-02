@@ -64,6 +64,7 @@ public class ChatActivity extends AppCompatActivity implements
     private Friend friend;
     private Group group;
     private String myUID;
+    private String myFullName;
     private MessageAdapter messageAdapter;
     private boolean isGroup, isGroupOwner;
     private List<Friend> groupMembersList;
@@ -88,6 +89,7 @@ public class ChatActivity extends AppCompatActivity implements
         this.isGroupOwner = false;
         this.group = new Group();
         this.myUID = sharedPreferenceHelper.getUser().getUid();
+        this.myFullName = sharedPreferenceHelper.getUser().getFullName();
         this.linearLayoutManager = new LinearLayoutManager(this);
         this.chatList = findViewById(R.id.rvChatList);
         this.etMessage = findViewById(R.id.etMessage);
@@ -458,31 +460,31 @@ public class ChatActivity extends AppCompatActivity implements
         }
     }
 
-    public void setChat(String content) {
-        SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getBaseContext());
-        Users anUser = sharedPreferenceHelper.getUser();
-        Friend me = new Friend(myUID, anUser.getFullName());
-        Map messageValue = new Chat(me, content).toMap();
-        Map chatValue = new ChatHeader(friend.getFullName(), content, false).toMap();
-        Map chatValue2 = new ChatHeader(anUser.getFullName(), content, false).toMap();
+    public void setChat(String message) {
+        Friend me = new Friend(myUID, myFullName);
+        Map messageValue = new Chat(me, message).toMap();
+        Map fiendChatValue = new ChatHeader(friend.getFullName(), message, false).toMap();
+        Map myChatValue = new ChatHeader(myFullName, message, false).toMap();
 
         Map<String, Object> childUpdates = new HashMap<>();
-        //String uuid = UUID.randomUUID().toString();
+        //Unique id auto-generated
         String uuid = FirebaseDatabase.getInstance().getReference().push().getKey();
         //Message detail
-        childUpdates.put("/" + DBContract.MessageTable.TABLE_NAME + "/" + myUID + "/" + friend.getUid() + "/" + uuid, messageValue);
-        childUpdates.put("/" + DBContract.MessageTable.TABLE_NAME + "/" + friend.getUid() + "/" + myUID + "/" + uuid, messageValue);
+        childUpdates.put("/" + DBContract.MessageTable.TABLE_NAME + "/" + myUID + "/" +
+                friend.getUid() + "/" + uuid, messageValue);
+        childUpdates.put("/" + DBContract.MessageTable.TABLE_NAME + "/" + friend.getUid() + "/" +
+                myUID + "/" + uuid, messageValue);
         //Message header
-        childUpdates.put("/" + DBContract.ChatsTable.TABLE_NAME + "/" + myUID + "/" + friend.getUid(), chatValue);
-        childUpdates.put("/" + DBContract.ChatsTable.TABLE_NAME + "/" + friend.getUid() + "/" + myUID, chatValue2);
+        childUpdates.put("/" + DBContract.ChatsTable.TABLE_NAME + "/" + myUID + "/" +
+                friend.getUid(), fiendChatValue);
+        childUpdates.put("/" + DBContract.ChatsTable.TABLE_NAME + "/" + friend.getUid() + "/" +
+                myUID, myChatValue);
 
         mDatabaseRef.updateChildren(childUpdates);
     }
 
     private void setGroupChat(String content) {
-        SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.getInstance(getBaseContext());
-        Users user = sharedPreferenceHelper.getUser();
-        Friend me = new Friend(myUID, user.getFullName());
+        Friend me = new Friend(myUID, myFullName);
         Map messageValue = new Chat(me, content).toMap();
         Map chatHeaderValue1 = new ChatHeader(friend.getFullName(), me.getFullName() + ": " + content, true).toMap();
         //Map chatHeaderVaue2 = new ChatHeader(user.getFullName(), content, true).toMap();

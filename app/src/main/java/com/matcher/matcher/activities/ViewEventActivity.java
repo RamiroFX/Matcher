@@ -52,7 +52,10 @@ import java.util.Map;
 public class ViewEventActivity extends AppCompatActivity implements
         ViewEventMapFragment.OnViewEventMapFragmentInteractionListener,
         ConfirmLogoutDialog.confirmLogoutDialogListener,
-        LocationService.LocationServiceListener {
+        LocationService.LocationServiceListener,
+        GroupEventDetailListener,
+        GroupEventMapListener
+        {
 
     private static final int LOCALIZATION_PERMISION_REQUEST = 101;
     private static final int LOCATION_CONFIG_REQUEST = 201;
@@ -70,8 +73,8 @@ public class ViewEventActivity extends AppCompatActivity implements
     private Location mLocation;
     private boolean deletingEvent;
     private List<EventParticipant> eventParticipantList;
-    private GroupEventDetailListener groupEventDetailListener;
-    private GroupEventMapListener groupEventMapListener;
+    //private GroupEventDetailListener groupEventDetailListener;
+    //private GroupEventMapListener groupEventMapListener;
 
     //Location vars
     private LocationService locationService;
@@ -99,7 +102,6 @@ public class ViewEventActivity extends AppCompatActivity implements
 
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
-
         fab = findViewById(R.id.fab_view_event);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -208,14 +210,13 @@ public class ViewEventActivity extends AppCompatActivity implements
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.d(TAG, "onChildAdded: " + dataSnapshot);
-                EventGroup eventGroup = dataSnapshot.getValue(EventGroup.class);
-                setEventFields(eventGroup);
-                setEventMap(eventGroup);
-                setMenuOptions(eventGroup);
-                mEventGroup = eventGroup;
-                mLocation = new Location(eventGroup.getEventName());
-                mLocation.setLongitude(eventGroup.getLongitude());
-                mLocation.setLatitude(eventGroup.getLatitude());
+                mEventGroup = dataSnapshot.getValue(EventGroup.class);
+                setEventFields(mEventGroup);
+                setEventMap(mEventGroup);
+                setMenuOptions(mEventGroup);
+                mLocation = new Location(mEventGroup.getEventName());
+                mLocation.setLongitude(mEventGroup.getLongitude());
+                mLocation.setLatitude(mEventGroup.getLatitude());
             }
 
             @Override
@@ -294,13 +295,25 @@ public class ViewEventActivity extends AppCompatActivity implements
         invalidateOptionsMenu();
     }
 
-    private void setEventFields(EventGroup eventGroup) {
-        groupEventDetailListener.setEventFields(eventGroup);
+    @Override
+    public void setEventFields(EventGroup eventGroup) {
+        Log.d(TAG, "setEventFields()");
+        Log.d(TAG, "eventGroup: " + eventGroup);
+        ViewEventDetailFragment fragViewDetail =  (ViewEventDetailFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:0");
+        fragViewDetail.setEventFields(eventGroup);
     }
 
-    private void addParticipant(EventParticipant eventParticipant) {
+
+            @Override
+            public void setParticipantStatus(String uid, String status) {
+
+            }
+            @Override
+            public void addParticipant(EventParticipant eventParticipant) {
         eventParticipantList.add(eventParticipant);
-        groupEventDetailListener.addParticipant(eventParticipant);
+                ViewEventDetailFragment fragViewDetail =  (ViewEventDetailFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:0");
+                fragViewDetail.addParticipant(eventParticipant);
+        //groupEventDetailListener.addParticipant(eventParticipant);
     }
 
     private void addParticipantMarker(EventParticipant eventParticipant) {
@@ -308,23 +321,27 @@ public class ViewEventActivity extends AppCompatActivity implements
         if (eventParticipant.getStatus().equals(DBContract.EventsParticipantsTable.COL_NAME_PARTICIPANT_STATUS_TRAVELING)) {
             LatLng latLng = new LatLng(eventParticipant.getLatitude(), eventParticipant.getLongitude());
             MarkerOptions markerOptions = new MarkerOptions().title(eventParticipant.getFullName()).position(latLng);
-            groupEventMapListener.addMarker(eventParticipant.getUid(), markerOptions);
+            ViewEventMapFragment fragViewDetail =  (ViewEventMapFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:1");
+            fragViewDetail.addMarker(eventParticipant.getUid(), markerOptions);
         }
     }
 
     private void updateParticipantMarker(EventParticipant eventParticipant) {
         Log.d(TAG, "updateParticipantMarker: " + eventParticipant);
         LatLng latLng = new LatLng(eventParticipant.getLatitude(), eventParticipant.getLongitude());
-        groupEventMapListener.updateMarker(eventParticipant.getUid(), latLng);
+        ViewEventMapFragment fragViewDetail =  (ViewEventMapFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:1");
+        fragViewDetail.updateMarker(eventParticipant.getUid(), latLng);
     }
 
     private void removeParticipantMarker(EventParticipant eventParticipant) {
         Log.d(TAG, "removeParticipantMarker: " + eventParticipant);
-        groupEventMapListener.removeMarker(eventParticipant.getUid());
+        ViewEventMapFragment fragViewDetail =  (ViewEventMapFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:1");
+        fragViewDetail.removeMarker(eventParticipant.getUid());
     }
 
     private void removeAllParticipantsMarkers() {
-        groupEventMapListener.removeAllMarker();
+        ViewEventMapFragment fragViewDetail =  (ViewEventMapFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:1");
+        fragViewDetail.removeAllMarker();
     }
 
     private void addMyLocationToFirebase(Location location) {
@@ -347,7 +364,8 @@ public class ViewEventActivity extends AppCompatActivity implements
 
     private void changeParticipantStatusInList(String uid, String status) {
         Log.d(TAG, "changeParticipantStatusInList");
-        groupEventDetailListener.setParticipantStatus(uid, status);
+        ViewEventDetailFragment fragViewDetail =  (ViewEventDetailFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:0");
+        fragViewDetail.setParticipantStatus(uid, status);
     }
 
     private void checkIfArrived(EventParticipant eventParticipant) {
@@ -366,7 +384,8 @@ public class ViewEventActivity extends AppCompatActivity implements
 
     private void setEventMap(EventGroup eventGroup) {
         Log.d(TAG, "setEventMap");
-        groupEventMapListener.updateMap(eventGroup);
+        ViewEventMapFragment fragViewDetail =  (ViewEventMapFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:1");
+        fragViewDetail.updateMap(eventGroup);
     }
 
     private void confirmDeleteEvent() {
@@ -470,7 +489,8 @@ public class ViewEventActivity extends AppCompatActivity implements
     }
 
     private boolean checkIfMarkerIsPresent(String uid) {
-        return groupEventMapListener.isMakerPresent(uid);
+        ViewEventMapFragment fragViewDetail =  (ViewEventMapFragment)getSupportFragmentManager().findFragmentByTag("android:switcher:2131296338:1");
+        return fragViewDetail.isMakerPresent(uid);
     }
 
     @Override
@@ -525,14 +545,46 @@ public class ViewEventActivity extends AppCompatActivity implements
     }
 
     public void setGroupEventDetailListener(GroupEventDetailListener groupEventListener) {
-        this.groupEventDetailListener = groupEventListener;
+        Log.e(TAG, "setGroupEventDetailListener: " + groupEventListener);
+        //this.groupEventDetailListener = groupEventListener;
     }
 
     public void setGroupEventMapListener(GroupEventMapListener groupEventMapListener) {
-        this.groupEventMapListener = groupEventMapListener;
+        Log.e(TAG, "setGroupEventMapListener: " + groupEventMapListener);
+        //this.groupEventMapListener = groupEventMapListener;
     }
 
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
+            @Override
+            public void addMarker(String uid, MarkerOptions markerOptions) {
+
+            }
+
+            @Override
+            public void updateMarker(String uid, LatLng latLng) {
+
+            }
+
+            @Override
+            public void removeMarker(String uid) {
+
+            }
+
+            @Override
+            public void updateMap(EventGroup eventGroup) {
+
+            }
+
+            @Override
+            public void removeAllMarker() {
+
+            }
+
+            @Override
+            public boolean isMakerPresent(String uid) {
+                return false;
+            }
+
+            public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -543,12 +595,12 @@ public class ViewEventActivity extends AppCompatActivity implements
             switch (position) {
                 case 0: {
                     ViewEventDetailFragment viewEventMapFragment = new ViewEventDetailFragment();
-                    setGroupEventDetailListener(viewEventMapFragment);
+                    //setGroupEventDetailListener(viewEventMapFragment);
                     return viewEventMapFragment;
                 }
                 case 1: {
                     ViewEventMapFragment viewEventMapFragment = new ViewEventMapFragment();
-                    setGroupEventMapListener(viewEventMapFragment);
+                    //setGroupEventMapListener(viewEventMapFragment);
                     return viewEventMapFragment;
                 }
                 default:

@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class ViewEventMapFragment extends Fragment implements OnMapReadyCallback, GroupEventMapListener {
+public class ViewEventMapFragment extends Fragment implements OnMapReadyCallback {
 
 
     public interface OnViewEventMapFragmentInteractionListener {
@@ -75,6 +75,8 @@ public class ViewEventMapFragment extends Fragment implements OnMapReadyCallback
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Log.d(TAG, "onAttach: " + context);
+        Log.d(TAG, "getTag: " + getTag());
         if (context instanceof OnViewEventMapFragmentInteractionListener) {
             mListener = (OnViewEventMapFragmentInteractionListener) context;
         } else {
@@ -113,7 +115,6 @@ public class ViewEventMapFragment extends Fragment implements OnMapReadyCallback
         mListener.onViewMapFragmentInteraction();
     }
 
-    @Override
     public void updateMap(EventGroup eventGroup) {
         LatLng eventLatLng = new LatLng(eventGroup.getLatitude(), eventGroup.getLongitude());
         mMap.addMarker(new MarkerOptions().position(eventLatLng).title(eventGroup.getEventName()));
@@ -121,9 +122,8 @@ public class ViewEventMapFragment extends Fragment implements OnMapReadyCallback
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(eventLatLng, 12.0f));
     }
 
-    @Override
     public void removeAllMarker() {
-        Log.d(TAG,"removeAllMarker");
+        Log.d(TAG, "removeAllMarker");
         Iterator it = mMarkers.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, Marker> pair = (Map.Entry) it.next();
@@ -132,7 +132,6 @@ public class ViewEventMapFragment extends Fragment implements OnMapReadyCallback
         }
     }
 
-    @Override
     public void addMarker(String uid, MarkerOptions markerOptions) {
         Log.d(TAG, "addMarker: " + markerOptions);
         /*MarkerOptions markerOptions = new MarkerOptions();
@@ -142,7 +141,6 @@ public class ViewEventMapFragment extends Fragment implements OnMapReadyCallback
         mMarkers.put(uid, marker);
     }
 
-    @Override
     public void removeMarker(String uid) {
         if (mMarkers.containsKey(uid)) {
             mMarkers.get(uid).remove();
@@ -150,14 +148,12 @@ public class ViewEventMapFragment extends Fragment implements OnMapReadyCallback
         }
     }
 
-    @Override
     public void updateMarker(String uid, LatLng latLng) {
         if (mMarkers.containsKey(uid)) {
             mMarkers.get(uid).setPosition(latLng);
         }
     }
 
-    @Override
     public boolean isMakerPresent(String uid) {
         return mMarkers.containsKey(uid);
     }

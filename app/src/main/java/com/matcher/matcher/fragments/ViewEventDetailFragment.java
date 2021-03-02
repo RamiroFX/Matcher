@@ -1,11 +1,13 @@
 package com.matcher.matcher.fragments;
 
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +22,7 @@ import com.matcher.matcher.interfaces.GroupEventDetailListener;
 import java.util.List;
 
 
-public class ViewEventDetailFragment extends Fragment implements GroupEventDetailListener {
+public class ViewEventDetailFragment extends Fragment {
 
     private static final String TAG = "ViewEventDetailFragment";
     private TextView tvEventName, tvEventDescription, tvEventSchedule, tvEventOwnerName, tvEventPlace;
@@ -46,6 +48,13 @@ public class ViewEventDetailFragment extends Fragment implements GroupEventDetai
     }
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Log.d(TAG,"onAttach: "+context);
+        Log.d(TAG,"getTag: "+getTag());
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         rvParticipants.setAdapter(eventParticipantsAdapter);
@@ -58,8 +67,8 @@ public class ViewEventDetailFragment extends Fragment implements GroupEventDetai
         this.eventParticipantsAdapter = new EventParticipantsAdapter();
     }
 
-    @Override
     public void setEventFields(EventGroup eventGroup) {
+        Log.d(TAG,"setEventFields: "+eventGroup);
         tvEventName.setText(eventGroup.getEventName());
         tvEventDescription.setText(eventGroup.getDescription());
         tvEventSchedule.setText(eventGroup.eventSchedule());
@@ -71,12 +80,10 @@ public class ViewEventDetailFragment extends Fragment implements GroupEventDetai
         this.eventParticipantsAdapter.setmValues(participantsList);
     }
 
-    @Override
     public void setParticipantStatus(String uid, String status) {
         eventParticipantsAdapter.setEventParticipantStatus(uid, status);
     }
 
-    @Override
     public void addParticipant(EventParticipant eventParticipant) {
         this.eventParticipantsAdapter.onEventParticipantAdded(eventParticipant);
     }
